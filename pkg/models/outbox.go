@@ -13,4 +13,5 @@ type Outbox struct {
 	Payload     json.RawMessage `json:"payload"`
 	AggregateID uuid.UUID       `json:"aggregate_id"`
 	CreatedAt   time.Time       `json:"created_at"`
+	SentAt      *time.Time      `json:"sent_at,omitempty"`
 }

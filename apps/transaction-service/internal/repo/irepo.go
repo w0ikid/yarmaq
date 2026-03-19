@@ -32,6 +32,8 @@ type ILedgerRepo interface {
 type IOutboxRepo interface {
 	Create(ctx context.Context, event models.Outbox) (*models.Outbox, error)
 	GetAll(ctx context.Context) ([]models.Outbox, error)
+	GetUnsent(ctx context.Context) ([]models.Outbox, error)
+	Update(ctx context.Context, event models.Outbox) (*models.Outbox, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 

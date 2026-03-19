@@ -14,6 +14,7 @@ type Outbox struct {
 	Payload     json.RawMessage `gorm:"type:jsonb;not null;column:payload" json:"payload"`
 	AggregateID uuid.UUID       `gorm:"type:uuid;not null;column:aggregate_id" json:"aggregate_id"`
 	CreatedAt   time.Time       `gorm:"autoCreateTime;column:created_at" json:"created_at"`
+	SentAt      *time.Time      `gorm:"column:sent_at" json:"sent_at,omitempty"`
 }
 
 func (o Outbox) ToDTO() models.Outbox {
@@ -23,6 +24,7 @@ func (o Outbox) ToDTO() models.Outbox {
 		Payload:     o.Payload,
 		AggregateID: o.AggregateID,
 		CreatedAt:   o.CreatedAt,
+		SentAt:      o.SentAt,
 	}
 }
 
@@ -33,5 +35,6 @@ func FromOutboxDTO(o models.Outbox) Outbox {
 		Payload:     o.Payload,
 		AggregateID: o.AggregateID,
 		CreatedAt:   o.CreatedAt,
+		SentAt:      o.SentAt,
 	}
 }
