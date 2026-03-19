@@ -2,7 +2,7 @@ package account
 
 import (
 	"math/big"
-
+	"github.com/w0ikid/yarmaq/pkg/models"
 	"fmt"
 )
 
@@ -20,16 +20,12 @@ func calcCheckDigits(bban string) string {
 	return fmt.Sprintf("%02d", check)
 }
 
-func generateAccountNumber(currency string, seq int64) string {
-	currencyCode := map[string]string{
-		"KZT": "001",
-		"USD": "002",
-		"EUR": "003",
-	}
-	code := currencyCode[currency]
-
-	bban := fmt.Sprintf("02%s%08d", code, seq) // 02 = код банка
-	check := calcCheckDigits(bban)
-
-	return fmt.Sprintf("KZ%s%s", check, bban)
+func generateAccountNumber(currency string, seq int64) (string, error) {
+    c, ok := models.GetCurrency(currency)
+    if !ok {
+        return "", fmt.Errorf("unsupported currency: %s", currency)
+    }
+    bban := fmt.Sprintf("02%s%08d", c.Numeric, seq)
+    check := calcCheckDigits(bban)
+    return fmt.Sprintf("KZ%s%s", check, bban), nil
 }

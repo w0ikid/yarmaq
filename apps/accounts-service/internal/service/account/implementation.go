@@ -35,18 +35,23 @@ func NewService(repo AccountRepo, ledgerRepo LedgerRepo, outboxRepo OutboxRepo, 
 }
 
 func (s *implementation) Create(ctx context.Context, account models.Account) (*models.Account, error) {
-	s.logger.Infow("creating account", "user_id", account.UserID, "number", account.Number)
-	
-	seq, err := s.repo.NextSeq(ctx)
-	if err != nil {
-		s.logger.Errorw("failed to get next account number sequence", "error", err)
-		return nil, err
-	}
+    if !models.IsValidCurrency(account.Currency) {
+        return nil, fmt.Errorf("unsupported currency: %s", account.Currency)
+    }
 
-	// Number generation logic
-	account.Number = generateAccountNumber(account.Currency, seq)
-	
-	return s.repo.Create(ctx, account)
+    seq, err := s.repo.NextSeq(ctx)
+    if err != nil {
+        s.logger.Errorw("failed to get next seq", "error", err)
+        return nil, err
+    }
+
+    account.Number, err = generateAccountNumber(account.Currency, seq)
+    if err != nil {
+        return nil, err
+    }
+
+    s.logger.Infow("creating account", "user_id", account.UserID, "number", account.Number)
+    return s.repo.Create(ctx, account)
 }
 
 func (s *implementation) GetByID(ctx context.Context, id uuid.UUID) (*models.Account, error) {

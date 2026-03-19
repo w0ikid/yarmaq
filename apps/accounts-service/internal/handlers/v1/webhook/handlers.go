@@ -3,7 +3,6 @@ package webhook
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase/account"
-	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase/users"
 	"go.uber.org/zap"
 )
 
@@ -17,7 +16,6 @@ type Handler interface {
 }
 
 type handler struct {
-	usersDomain   users.UsersDomain
 	accountDomain account.AccountDomain
 	logger        *zap.SugaredLogger
 }

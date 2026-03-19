@@ -20,7 +20,6 @@ import (
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/account"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/ledger"
-	v1users "github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/users"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/webhook"
 )
 
@@ -69,11 +68,6 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 
 	// Handlers
 	h := handlers.NewHandlers(handlers.Depedencies{
-		UsersDeps: v1users.HandlerDeps{
-			CreateUser: cont.UsersDomain.CreateUsecase,
-			GetUser:    cont.UsersDomain.GetUserUsecase,
-			Logger:     appLogger,
-		},
 		AccountDeps: account.HandlerDeps{
 			AccountDomain: cont.AccountDomain,
 			Logger:        appLogger,

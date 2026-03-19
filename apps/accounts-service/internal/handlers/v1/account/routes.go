@@ -19,5 +19,4 @@ func NewRouter(router fiber.Router, handler Handler) *Router {
 func (r *Router) SetupRoutes() {
 	r.router.Post("/", r.handler.CreateAccount)
 	r.router.Get("/:id", r.handler.GetAccount)
-	r.router.Post("/:id/balance", r.handler.UpdateBalance)
 }

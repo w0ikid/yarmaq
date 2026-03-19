@@ -7,7 +7,6 @@ import (
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/middleware"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/account"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/ledger"
-	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/users"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/webhook"
 	"go.uber.org/zap"
 )
@@ -31,13 +30,6 @@ func (r *Router) SetupRoutes(logger *zap.SugaredLogger) {
 	})
 
 	// routes
-	usersRouter := r.router.Group("/users")
-	usersRouter.Use(	
-		middleware.AuthMiddleware(r.handler.JWKS),
-		middleware.UserContextMiddleware(),
-	)
-	users.NewRouter(usersRouter, r.handler.Users).SetupRoutes()
-
 	accountsRouter := r.router.Group("/accounts")
 	accountsRouter.Use(
 		middleware.AuthMiddleware(r.handler.JWKS),
