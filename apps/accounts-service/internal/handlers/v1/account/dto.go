@@ -5,8 +5,6 @@ import (
 )
 
 type CreateAccountRequest struct {
-	UserID   string `json:"user_id"`
-	Number   string `json:"number"`
 	Currency string `json:"currency"`
 }
 

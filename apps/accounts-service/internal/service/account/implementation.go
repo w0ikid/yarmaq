@@ -2,7 +2,6 @@ package account
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -37,6 +36,16 @@ func NewService(repo AccountRepo, ledgerRepo LedgerRepo, outboxRepo OutboxRepo, 
 
 func (s *implementation) Create(ctx context.Context, account models.Account) (*models.Account, error) {
 	s.logger.Infow("creating account", "user_id", account.UserID, "number", account.Number)
+	
+	seq, err := s.repo.NextSeq(ctx)
+	if err != nil {
+		s.logger.Errorw("failed to get next account number sequence", "error", err)
+		return nil, err
+	}
+
+	// Number generation logic
+	account.Number = generateAccountNumber(account.Currency, seq)
+	
 	return s.repo.Create(ctx, account)
 }
 
@@ -83,19 +92,6 @@ func (s *implementation) UpdateBalance(ctx context.Context, accountID uuid.UUID,
 		OperationType: operationType,
 		ReferenceID:   referenceID,
 		CreatedAt:     time.Now(),
-	})
-	if err != nil {
-		return err
-	}
-
-	// 4. Create Outbox event
-	payload, _ := json.Marshal(acc)
-	_, err = s.outboxRepo.Create(ctx, models.Outbox{
-		ID:          uuid.New(),
-		EventType:   "account.balance_updated",
-		Payload:     payload,
-		AggregateID: accountID,
-		CreatedAt:   time.Now(),
 	})
 	if err != nil {
 		return err

@@ -96,3 +96,13 @@ func (r *AccountRepo) Delete(ctx context.Context, id uuid.UUID) error {
 	}
 	return nil
 }
+
+func (r *AccountRepo) NextSeq(ctx context.Context) (int64, error) {
+    var seq int64
+    err := r.tx(ctx).Raw("SELECT nextval('account_number_seq')").Scan(&seq).Error
+    if err != nil {
+        r.logger.Errorw("failed to get next seq", "error", err)
+        return 0, err
+    }
+    return seq, nil
+}

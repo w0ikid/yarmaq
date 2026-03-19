@@ -14,6 +14,8 @@ type AccountRepo interface {
 	GetByUserID(ctx context.Context, userID uuid.UUID) (*models.Account, error)
 	Update(ctx context.Context, account models.Account) (*models.Account, error)
 	Delete(ctx context.Context, id uuid.UUID) error
+
+	NextSeq(ctx context.Context) (int64, error)
 }
 
 type LedgerRepo interface {

@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase/account"
+	"github.com/w0ikid/yarmaq/pkg/ctxkeys"
 	"github.com/w0ikid/yarmaq/pkg/models"
 	"go.uber.org/zap"
 )
@@ -36,12 +37,10 @@ func (h *handler) CreateAccount(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
 	}
-
+	
 	acc := models.Account{
-		UserID:   req.UserID,
-		Number:   req.Number,
+		UserID:   ctxkeys.GetUserID(c.UserContext()),
 		Currency: req.Currency,
-		Balance:  0,
 	}
 
 	created, err := h.domain.CreateUsecase.Execute(c.Context(), acc)

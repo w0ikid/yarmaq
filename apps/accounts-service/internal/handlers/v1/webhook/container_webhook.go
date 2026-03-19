@@ -2,7 +2,6 @@ package webhook
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -62,34 +61,23 @@ func (h *handler) HandleZitadelSync(c *fiber.Ctx) error {
 }
 
 func (h *handler) handleUserCreated(c *fiber.Ctx, req WebhookRequest) error {
-	var r AddHumanUserRequest
-	if err := json.Unmarshal(req.Request, &r); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request payload"})
-	}
-
 	var resp AddHumanUserResponse
 	if err := json.Unmarshal(req.Response, &resp); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid response payload"})
 	}
 
-	email := strings.TrimSpace(r.Email.Email)
-	username := strings.TrimSpace(r.Username)
-	if username == "" {
-		username = email
-	}
 	zitadelUserID := strings.TrimSpace(resp.UserID)
 
-	if zitadelUserID == "" || email == "" {
+	if zitadelUserID == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Missing required fields"})
 	}
 
-	h.logger.Infow("processing user created webhook", "zitadel_user_id", zitadelUserID, "email", email)
+	h.logger.Infow("processing user created webhook", "zitadel_user_id", zitadelUserID)
 
 	account := models.Account{
 		UserID:   resp.UserID,
-		Number:   fmt.Sprintf("ACC-%s", strings.ToUpper(resp.UserID[:8])),
 		Currency: "KZT",
-		Status:   "ACTIVE",
+		Balance:  1000, // initial balance for new users
 	}
 
 	_, err := h.accountDomain.CreateUsecase.Execute(c.UserContext(), account)

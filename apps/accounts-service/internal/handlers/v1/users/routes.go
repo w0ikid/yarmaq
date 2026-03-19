@@ -20,5 +20,5 @@ func NewRouter(router fiber.Router, handler Handler) *Router {
 func (r *Router) SetupRoutes() {
 	r.router.Post("/", r.handler.CreateUser)
 	r.router.Get("/", r.handler.GetUser)
-	r.router.Get("/protected", middleware.RBACMiddleware("manager", "hr"), r.handler.ProtectedUserEndpoint)
+	r.router.Get("/protected", middleware.RBACMiddleware("support"), r.handler.ProtectedUserEndpoint)
 }

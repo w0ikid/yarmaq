@@ -62,14 +62,11 @@ func (h *handler) GetUser(c *fiber.Ctx) error {
 }
 
 func (h *handler) ProtectedUserEndpoint(c *fiber.Ctx) error {
-	userID := c.Locals("userID").(string)
-	roles, _ := c.Locals("roles").([]string)
+	ctx := c.UserContext()
+	userID := ctxkeys.GetUserID(ctx)
+	roles := ctxkeys.GetRoles(ctx)
 
-	ctx := ctxkeys.WithUserContext(c.UserContext(), userID, roles)
 
-	ctxkeys.GetUserID(ctx)
-	ctxkeys.GetRoles(ctx)
-	
-	h.logger.Infow("accessed protected endpoint", "userID", userID)
+	h.logger.Infow("accessed protected endpoint", "userID", userID, "roles", roles)
 	return c.Status(200).JSON(fiber.Map{"message": "This is a protected endpoint", "userID": userID})
 }

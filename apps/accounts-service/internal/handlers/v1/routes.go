@@ -32,11 +32,17 @@ func (r *Router) SetupRoutes(logger *zap.SugaredLogger) {
 
 	// routes
 	usersRouter := r.router.Group("/users")
-	usersRouter.Use(middleware.AuthMiddleware(r.handler.JWKS))
+	usersRouter.Use(	
+		middleware.AuthMiddleware(r.handler.JWKS),
+		middleware.UserContextMiddleware(),
+	)
 	users.NewRouter(usersRouter, r.handler.Users).SetupRoutes()
 
 	accountsRouter := r.router.Group("/accounts")
-	accountsRouter.Use(middleware.AuthMiddleware(r.handler.JWKS))
+	accountsRouter.Use(
+		middleware.AuthMiddleware(r.handler.JWKS),
+		middleware.UserContextMiddleware(),
+	)
 	account.NewRouter(accountsRouter, r.handler.Account).SetupRoutes()
 
 	ledgerRouter := r.router.Group("/ledger")

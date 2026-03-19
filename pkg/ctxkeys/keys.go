@@ -15,12 +15,10 @@ func WithUserContext(ctx context.Context, userID string, roles []string) context
     return ctx
 }
 
-func GetUserID(ctx context.Context) (string, bool) {
-    v, ok := ctx.Value(UserID).(string)
-    return v, ok
+func GetUserID(ctx context.Context) string {
+    return ctx.Value(UserID).(string)
 }
 
-func GetRoles(ctx context.Context) ([]string, bool) {
-    v, ok := ctx.Value(Roles).([]string)
-    return v, ok
+func GetRoles(ctx context.Context) []string {
+    return ctx.Value(Roles).([]string)
 }
