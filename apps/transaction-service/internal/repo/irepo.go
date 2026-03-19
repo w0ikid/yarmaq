@@ -35,9 +35,24 @@ type IOutboxRepo interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
+type ITransactionRepo interface {
+	Create(ctx context.Context, transaction models.Transaction) (*models.Transaction, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*models.Transaction, error)
+	Update(ctx context.Context, transaction models.Transaction) (*models.Transaction, error)
+	GetByIdempotencyKey(ctx context.Context, key string) (*models.Transaction, error)
+}
+
+type ISagaStepRepo interface {
+	Create(ctx context.Context, step models.SagaStep) (*models.SagaStep, error)
+	GetByTransactionID(ctx context.Context, transactionID uuid.UUID) ([]models.SagaStep, error)
+	Update(ctx context.Context, step models.SagaStep) (*models.SagaStep, error)
+}
+
 type Repository struct {
 	ContextTransaction IContextTransaction
 	Account            IAccountRepo
 	Ledger             ILedgerRepo
 	Outbox             IOutboxRepo
+	Transaction        ITransactionRepo
+	SagaStep           ISagaStepRepo
 }

@@ -14,5 +14,7 @@ func NewGormRepository(db *gorm.DB, logger *zap.SugaredLogger) *repo.Repository 
 		Account:            NewAccountRepo(db, log),
 		Ledger:             NewLedgerRepo(db, log),
 		Outbox:             NewOutboxRepo(db, log),
+		Transaction:        NewTransactionRepo(db, log),
+		SagaStep:           NewSagaStepRepo(db, log),
 	}
 }

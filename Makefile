@@ -65,7 +65,10 @@ migrate-accounts:
 
 migrate-transactions:
 	@echo "$(YELLOW)Running migrations for Transaction Service...$(NC)"
-	cd apps/transaction-service && goose -dir migrations $(GOOSE_DRIVER) "$(TRANSACTIONS_DB_URL)" up
+	cd apps/transaction-service && \
+	GOOSE_DRIVER=$(GOOSE_DRIVER) \
+	GOOSE_DBSTRING="$(TRANSACTION_DB_URL)" \
+	goose -dir migrations up
 
 migrate-all: migrate-accounts migrate-transactions
 
@@ -90,7 +93,7 @@ down-v:
 # ЛОКАЛЬНЫЙ ЗАПУСК (Development)
 # ───────────────────────────────────────────
 run-accounts:
-	go run apps/accounts-service/cmd/main.go
+	go run apps/accounts-service/cmd/api/main.go
 
 run-transactions:
-	go run apps/transaction-service/cmd/main.go
+	go run apps/transaction-service/cmd/api/main.go
