@@ -2,9 +2,9 @@ package account
 
 import (
 	"context"
-	"fmt"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase"
 	"github.com/w0ikid/yarmaq/pkg/models"
+	"encoding/json"
 )
 
 type CreateAccountUsecase struct {
@@ -33,10 +33,15 @@ func (uc *CreateAccountUsecase) Execute(ctx context.Context, account models.Acco
 		return nil, err
 	}
 
+	payload, err := json.Marshal(models.AccountCreatedEvent{
+		ID:     createdAccount.ID.String(),
+		UserID: createdAccount.UserID,
+	})
+
 	// outbox event
 	_, err = uc.OutboxService.Create(txCtx, models.Outbox{
 		EventType:   "account.created",
-		Payload:     []byte(fmt.Sprintf(`{"id": "%s", "user_id": "%s"}`, createdAccount.ID, createdAccount.UserID)),
+		Payload:     payload,
 		AggregateID: createdAccount.ID,
 	})
 	if err != nil {
