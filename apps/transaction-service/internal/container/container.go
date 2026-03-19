@@ -10,6 +10,7 @@ import (
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase/ledger"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase/outbox"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase/transaction"
+	"github.com/w0ikid/yarmaq/pkg/httpclient/accounts"
 	"github.com/w0ikid/yarmaq/pkg/zitadel"
 	"go.uber.org/zap"
 )
@@ -29,12 +30,13 @@ func NewContainer(
 	ctx context.Context,
 	repositories *repo.Repository,
 	zitadelClient *zitadel.Client,
+	accountsClient *accounts.Client,
 	logger *zap.SugaredLogger,
 
 ) *Container {
 	logger = logger.Named("container")
 
-	services := service.New(repositories, zitadelClient, logger)
+	services := service.New(repositories, zitadelClient, accountsClient, logger)
 
 	baseusecase := usecase.BaseUsecase{
 		Logger: logger.Named("base_usecase"),
@@ -49,6 +51,6 @@ func NewContainer(
 		AccountDomain:     account.NewDomain(baseusecase, services.AccountService),
 		LedgerDomain:      ledger.NewDomain(baseusecase, services.LedgerService),
 		OutboxDomain:      outbox.NewDomain(baseusecase, services.OutboxService),
-		TransactionDomain: transaction.NewDomain(baseusecase, services.TransactionService),
+		TransactionDomain: transaction.NewDomain(baseusecase, services.TransactionService, services.OutboxService),
 	}
 }

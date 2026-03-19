@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/w0ikid/yarmaq/pkg/ctxkeys"
+	"github.com/w0ikid/yarmaq/pkg/httpclient/accounts"
 	"github.com/w0ikid/yarmaq/pkg/models"
 	"go.uber.org/zap"
 )
@@ -15,21 +17,60 @@ type Service interface {
 	UpdateStatus(ctx context.Context, id uuid.UUID, status string) error
 }
 
-
 type implementation struct {
-	repo   TransactionRepo
-	logger *zap.SugaredLogger
+	repo    TransactionRepo
+	accountsClient *accounts.Client
+	logger  *zap.SugaredLogger
 }
 
-func NewService(repo TransactionRepo, logger *zap.SugaredLogger) Service {
+func NewService(repo TransactionRepo, accountsClient *accounts.Client, logger *zap.SugaredLogger) Service {
 	return &implementation{
 		repo:   repo,
+		accountsClient: accountsClient,
 		logger: logger.Named("transaction_service"),
 	}
 }
 
 func (s *implementation) Create(ctx context.Context, transaction models.Transaction) (*models.Transaction, error) {
 	s.logger.Infow("creating transaction", "from", transaction.FromAccountID, "to", transaction.ToAccountID, "amount", transaction.Amount)
+
+	userID := ctxkeys.GetUserID(ctx)
+
+	fromAccount, err := s.accountsClient.GetAccount(ctx, transaction.FromAccountID.String())
+	if err != nil {
+		return nil, fmt.Errorf("get from_account: %w", err)
+	}
+	if fromAccount == nil {
+		return nil, fmt.Errorf("from_account not found: %s", transaction.FromAccountID)
+	}
+
+	// Validate ownership
+	if fromAccount.UserID != userID {
+		return nil, fmt.Errorf("unauthorized: account %s does not belong to user %s", transaction.FromAccountID, userID)
+	}
+
+	toAccount, err := s.accountsClient.GetAccount(ctx, transaction.ToAccountID.String())
+	if err != nil {
+		return nil, fmt.Errorf("get to_account: %w", err)
+	}
+	if toAccount == nil {
+		return nil, fmt.Errorf("to_account not found: %s", transaction.ToAccountID)
+	}
+
+	if fromAccount.Currency != toAccount.Currency {
+		return nil, fmt.Errorf("accounts have different currencies: %s vs %s", fromAccount.Currency, toAccount.Currency)
+	}
+
+	if transaction.Amount <= 0 {
+		return nil, fmt.Errorf("transaction amount must be positive")
+	}
+
+	if transaction.FromAccountID == transaction.ToAccountID {
+		return nil, fmt.Errorf("from and to accounts cannot be the same")
+	}
+
+	transaction.Currency = fromAccount.Currency
+	transaction.Status = models.TransactionStatusPending
 
 	if transaction.IdempotencyKey != "" {
 		existing, err := s.repo.GetByIdempotencyKey(ctx, transaction.IdempotencyKey)
@@ -48,7 +89,6 @@ func (s *implementation) Create(ctx context.Context, transaction models.Transact
 func (s *implementation) GetByID(ctx context.Context, id uuid.UUID) (*models.Transaction, error) {
 	return s.repo.GetByID(ctx, id)
 }
-
 
 func (s *implementation) UpdateStatus(ctx context.Context, id uuid.UUID, status string) error {
 	s.logger.Infow("updating transaction status", "id", id, "status", status)

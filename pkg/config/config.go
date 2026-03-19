@@ -14,6 +14,7 @@ type Config struct {
 	Postgres PostgresConfig
 	Zitadel  ZitadelConfig
 	Kafka    KafkaConfig
+	Services ServiceConfig
 }
 
 type HTTPConfig struct {
@@ -39,6 +40,11 @@ type ZitadelConfig struct {
 type KafkaConfig struct {
 	Brokers []string
 	Topic   string
+}
+
+type ServiceConfig struct {
+	AccountsServiceURL    string
+	TransactionServiceURL string
 }
 
 func (p PostgresConfig) DSN() string {
@@ -84,6 +90,10 @@ func Load(prefix ...string) Config {
 			Brokers: getEnvSlice("KAFKA_BROKERS", "localhost:9092", servicePrefix),
 			Topic:   getEnv("KAFKA_TOPIC", "events", servicePrefix),
 		},
+        Services: ServiceConfig{
+            AccountsServiceURL:    getEnv("ACCOUNTS_SERVICE_URL", "http://localhost:8081"),
+            TransactionServiceURL: getEnv("TRANSACTION_SERVICE_URL", "http://localhost:8082"),
+        },
 	}
 }
 

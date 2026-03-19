@@ -20,6 +20,8 @@ import (
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1/account"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1/ledger"
+	"github.com/w0ikid/yarmaq/pkg/httpclient"
+	"github.com/w0ikid/yarmaq/pkg/httpclient/accounts"
 )
 
 type App struct {
@@ -62,8 +64,18 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 	// Репозитории
 	repositories := igorm.NewGormRepository(pg.DB(), appLogger)
 
+	// HTTP Clients
+	httpClient := httpclient.New(cfg.Services.AccountsServiceURL, zitadelClient)
+	accountsClient := accounts.New(cfg.Services.AccountsServiceURL, httpClient)
+
 	// DI контейнер
-	cont := container.NewContainer(ctx, repositories, zitadelClient, appLogger)
+	cont := container.NewContainer(
+		ctx,
+		repositories,
+		zitadelClient,
+		accountsClient,
+		appLogger,
+	)
 
 	// Handlers
 	h := handlers.NewHandlers(handlers.Depedencies{

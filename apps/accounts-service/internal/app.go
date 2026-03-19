@@ -63,10 +63,12 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 	if err != nil {
 		return nil, fmt.Errorf("init zitadel client: %w", err)
 	}
+
 	appLogger.Info("zitadel client initialized", zitadelClient)
 	appLogger.Info("zitadel domain: ", cfg.Zitadel.Domain)
 	appLogger.Info("zitadel keyPath: ", cfg.Zitadel.KeyPath)
 
+	// kafka publisher
 	kafkaPublisher, err := kafkamodule.NewPublisher(kafkamodule.Config{
 		Brokers: cfg.Kafka.Brokers,
 	}, appLogger)
@@ -82,6 +84,10 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 		outbox_worker.WithBatchSize(50),
 	)
 
+	// kafka consumers
+	// consumers := []*kafkamodule.Consumer{
+		
+	// }
 	// Репозитории
 	repositories := igorm.NewGormRepository(pg.DB(), appLogger)
 
