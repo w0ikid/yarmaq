@@ -2,6 +2,7 @@ package igorm
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/w0ikid/yarmaq/pkg/models"
@@ -33,6 +34,19 @@ func (r *SagaStepRepo) Create(ctx context.Context, step models.SagaStep) (*model
 	e := entity.FromSagaStepDTO(step)
 	if err := r.tx(ctx).Create(&e).Error; err != nil {
 		r.logger.Errorw("failed to create saga step", "error", err, "transaction_id", step.TransactionID)
+		return nil, err
+	}
+	dto := e.ToDTO()
+	return &dto, nil
+}
+
+func (r *SagaStepRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.SagaStep, error) {
+	var e entity.SagaStep
+	err := r.tx(ctx).Where("id = ?", id).First(&e).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	dto := e.ToDTO()

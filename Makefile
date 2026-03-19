@@ -9,7 +9,7 @@ endif
 # ───────────────────────────────────────────
 GOOSE_DRIVER     ?= postgres
 DOCKER_DIR       := ./deployment
-DB_COMPOSE       := $(DOCKER_DIR)/docker-compose.db.yml
+DB_COMPOSE       := $(DOCKER_DIR)/docker-compose.infra.yml
 ZITADEL_COMPOSE  := $(DOCKER_DIR)/docker-compose.zitadel.yml
 
 # Проекты (для разделения в docker ps)

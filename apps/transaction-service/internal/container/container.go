@@ -9,6 +9,7 @@ import (
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase/account"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase/ledger"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase/outbox"
+	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase/transaction"
 	"github.com/w0ikid/yarmaq/pkg/zitadel"
 	"go.uber.org/zap"
 )
@@ -18,9 +19,10 @@ type Container struct {
 
 	Services *service.Service
 
-	AccountDomain account.AccountDomain
-	LedgerDomain  ledger.LedgerDomain
-	OutboxDomain  outbox.OutboxDomain
+	AccountDomain     account.AccountDomain
+	LedgerDomain      ledger.LedgerDomain
+	OutboxDomain      outbox.OutboxDomain
+	TransactionDomain transaction.TransactionDomain
 }
 
 func NewContainer(
@@ -44,9 +46,9 @@ func NewContainer(
 
 		Services: services,
 
-		AccountDomain: account.NewDomain(baseusecase, services.AccountService),
-		LedgerDomain:  ledger.NewDomain(baseusecase, services.LedgerService),
-		OutboxDomain:  outbox.NewDomain(baseusecase, services.OutboxService),
+		AccountDomain:     account.NewDomain(baseusecase, services.AccountService),
+		LedgerDomain:      ledger.NewDomain(baseusecase, services.LedgerService),
+		OutboxDomain:      outbox.NewDomain(baseusecase, services.OutboxService),
+		TransactionDomain: transaction.NewDomain(baseusecase, services.TransactionService),
 	}
-
 }
