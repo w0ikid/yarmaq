@@ -48,7 +48,7 @@ func main() {
 	// SERVER
 	serverErrCh := make(chan error, 1)
 	go func() {
-		serverErrCh <- app.Start()
+		serverErrCh <- app.Start(ctx)
 	}()
 
 	// SHUTDOWN

@@ -21,6 +21,9 @@ import (
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/account"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/ledger"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/webhook"
+
+	kafkamodule "github.com/w0ikid/yarmaq/pkg/kafka_module"
+	"github.com/w0ikid/yarmaq/pkg/outbox_worker"
 )
 
 type App struct {
@@ -30,6 +33,9 @@ type App struct {
 	logger    *zap.SugaredLogger
 	pg        *repo.Postgres
 	cancel    context.CancelFunc
+
+	kafkaPublisher *kafkamodule.Publisher
+	outboxWorker   *outbox_worker.Worker
 }
 
 func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (*App, error) {
@@ -60,6 +66,22 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 	appLogger.Info("zitadel client initialized", zitadelClient)
 	appLogger.Info("zitadel domain: ", cfg.Zitadel.Domain)
 	appLogger.Info("zitadel keyPath: ", cfg.Zitadel.KeyPath)
+
+	kafkaPublisher, err := kafkamodule.NewPublisher(kafkamodule.Config{
+		Brokers: cfg.Kafka.Brokers,
+	}, appLogger)
+	if err != nil {
+		return nil, fmt.Errorf("init kafka publisher: %w", err)
+	}
+
+	outboxWorker := outbox_worker.NewWorker(
+		pg.DB(),
+		kafkaPublisher,
+		appLogger,
+		outbox_worker.WithInterval(3*time.Second),
+		outbox_worker.WithBatchSize(50),
+	)
+
 	// Репозитории
 	repositories := igorm.NewGormRepository(pg.DB(), appLogger)
 
@@ -104,11 +126,16 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 		logger:    appLogger,
 		pg:        pg,
 		cancel:    cancel,
+
+		kafkaPublisher: kafkaPublisher,
+		outboxWorker:   outboxWorker,
 	}, nil
 }
 
 // Start запускает HTTP сервер
-func (a *App) Start() error {
+func (a *App) Start(ctx context.Context) error {
+	go a.outboxWorker.Run(ctx)
+
 	a.logger.Info("starting HTTP server", zap.String("addr", a.addr))
 	if err := a.fapp.Listen(a.addr); err != nil {
 		return fmt.Errorf("fiber server: %w", err)
@@ -138,6 +165,11 @@ func (a *App) Stop(ctx context.Context) error {
 		errOccurred = true
 	} else {
 		a.logger.Info("postgres connection closed")
+	}
+	// close kafka publisher
+	if err := a.kafkaPublisher.Close(); err != nil {
+		a.logger.Error("kafka publisher close failed", zap.Error(err))
+		errOccurred = true
 	}
 
 	if errOccurred {

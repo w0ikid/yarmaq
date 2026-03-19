@@ -2,7 +2,7 @@ package account
 
 import (
 	"context"
-	
+	"fmt"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase"
 	"github.com/w0ikid/yarmaq/pkg/models"
 )
@@ -11,6 +11,10 @@ type CreateAccountUsecase struct {
 	usecase.BaseUsecase
 	AccountService interface {
 		Create(ctx context.Context, account models.Account) (*models.Account, error)
+	}
+
+	OutboxService interface {
+		Create(ctx context.Context, event models.Outbox) (*models.Outbox, error)
 	}
 }
 
@@ -26,6 +30,17 @@ func (uc *CreateAccountUsecase) Execute(ctx context.Context, account models.Acco
 	createdAccount, err := uc.AccountService.Create(txCtx, account)
 	if err != nil {
 		uc.Logger.Errorw("failed to create account", "user_id", account.UserID, "error", err)
+		return nil, err
+	}
+
+	// outbox event
+	_, err = uc.OutboxService.Create(txCtx, models.Outbox{
+		EventType:   "account.created",
+		Payload:     []byte(fmt.Sprintf(`{"id": "%s", "user_id": "%s"}`, createdAccount.ID, createdAccount.UserID)),
+		AggregateID: createdAccount.ID,
+	})
+	if err != nil {
+		uc.Logger.Errorw("failed to create outbox event", "user_id", account.UserID, "error", err)
 		return nil, err
 	}
 

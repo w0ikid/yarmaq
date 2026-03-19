@@ -38,3 +38,7 @@ func FromOutboxDTO(o models.Outbox) Outbox {
 		SentAt:      o.SentAt,
 	}
 }
+
+func (Outbox) TableName() string {
+    return "outbox"
+}
