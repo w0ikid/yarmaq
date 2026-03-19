@@ -8,7 +8,7 @@ import (
 
 type Account struct {
 	ID        uuid.UUID  `json:"id"`
-	UserID    uuid.UUID  `json:"user_id"`
+	UserID    string     `json:"user_id"`
 	Number    string     `json:"number"`
 	Balance   int64      `json:"balance"`
 	Currency  string     `json:"currency"`

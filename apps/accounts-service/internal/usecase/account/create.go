@@ -2,19 +2,10 @@ package account
 
 import (
 	"context"
-
-	"github.com/google/uuid"
+	
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase"
 	"github.com/w0ikid/yarmaq/pkg/models"
 )
-
-type Service interface {
-	Create(ctx context.Context, account models.Account) (*models.Account, error)
-	GetByID(ctx context.Context, id uuid.UUID) (*models.Account, error)
-	GetByNumber(ctx context.Context, number string) (*models.Account, error)
-	GetByUserID(ctx context.Context, userID uuid.UUID) (*models.Account, error)
-	UpdateBalance(ctx context.Context, accountID uuid.UUID, amount int64, operationType string, referenceID *uuid.UUID) error
-}
 
 type CreateAccountUsecase struct {
 	usecase.BaseUsecase

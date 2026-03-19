@@ -18,6 +18,8 @@ import (
 
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/container"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers"
+	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/account"
+	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/ledger"
 	v1users "github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/users"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/webhook"
 )
@@ -72,15 +74,23 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 			GetUser:    cont.UsersDomain.GetUserUsecase,
 			Logger:     appLogger,
 		},
+		AccountDeps: account.HandlerDeps{
+			AccountDomain: cont.AccountDomain,
+			Logger:        appLogger,
+		},
+		LedgerDeps: ledger.HandlerDeps{
+			LedgerDomain: cont.LedgerDomain,
+			Logger:       appLogger,
+		},
 		WebhookDeps: webhook.HandlerDeps{
-			CreateUser: cont.UsersDomain.CreateUsecase,
-			Logger:     appLogger,
+			AccountDomain: cont.AccountDomain,
+			Logger:        appLogger,
 		},
 		JWKS: jwksClient,
 	})
 
 	fapp := fiber.New(fiber.Config{
-		AppName:      "clean-users-service",
+		AppName:      "accounts-service",
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	})

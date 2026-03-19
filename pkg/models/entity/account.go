@@ -9,7 +9,7 @@ import (
 
 type Account struct {
 	ID        uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id" json:"id"`
-	UserID    uuid.UUID  `gorm:"type:uuid;uniqueIndex;not null;column:user_id" json:"user_id"`
+	UserID    string     `gorm:"type:varchar(255);uniqueIndex;not null;column:user_id" json:"user_id"`
 	Number    string     `gorm:"type:varchar(20);uniqueIndex;not null;column:number" json:"number"`
 	Balance   int64      `gorm:"type:bigint;not null;default:0;column:balance" json:"balance"`
 	Currency  string     `gorm:"type:varchar(3);not null;default:'KZT';column:currency" json:"currency"`

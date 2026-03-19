@@ -1,6 +1,7 @@
 package account
 
 import (
+	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/service/account"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase"
 )
 
@@ -10,7 +11,7 @@ type AccountDomain struct {
 	UpdateBalanceUsecase UpdateBalanceUsecase
 }
 
-func NewDomain(baseusecase usecase.BaseUsecase, accountService Service) AccountDomain {
+func NewDomain(baseusecase usecase.BaseUsecase, accountService account.Service) AccountDomain {
 	baseusecase.Logger = baseusecase.Logger.Named("account_domain")
 	return AccountDomain{
 		CreateUsecase: CreateAccountUsecase{

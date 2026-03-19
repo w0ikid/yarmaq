@@ -16,7 +16,7 @@ import (
 
 func main() {
 	// CONFIG
-	cfg := config.Load()
+	cfg := config.Load("ACCOUNTS")
 
 	// LOGGER
 	var logger *zap.Logger

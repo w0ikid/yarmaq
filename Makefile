@@ -43,6 +43,9 @@ infra-up:
 infra-down:
 	docker compose -p $(INFRA_PROJECT) -f $(DB_COMPOSE) down
 
+infra-down-v:
+	docker compose -p $(INFRA_PROJECT) -f $(DB_COMPOSE) down -v
+
 zitadel-up:
 	docker compose -p $(ZITADEL_PROJECT) -f $(ZITADEL_COMPOSE) up -d
 

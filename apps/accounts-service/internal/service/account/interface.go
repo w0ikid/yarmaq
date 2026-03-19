@@ -23,5 +23,3 @@ type LedgerRepo interface {
 type OutboxRepo interface {
 	Create(ctx context.Context, event models.Outbox) (*models.Outbox, error)
 }
-
-

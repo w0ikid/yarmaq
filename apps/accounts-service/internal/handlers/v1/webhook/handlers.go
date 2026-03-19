@@ -2,14 +2,14 @@ package webhook
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase/account"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase/users"
 	"go.uber.org/zap"
 )
 
 type HandlerDeps struct {
-	CreateUser users.CreateUsecase
-	UpdateUser users.UpdateUserUsecase
-	Logger     *zap.SugaredLogger
+	AccountDomain account.AccountDomain
+	Logger        *zap.SugaredLogger
 }
 
 type Handler interface {
@@ -17,16 +17,15 @@ type Handler interface {
 }
 
 type handler struct {
-	createUser users.CreateUsecase
-	updateUser users.UpdateUserUsecase
-	logger     *zap.SugaredLogger
+	usersDomain   users.UsersDomain
+	accountDomain account.AccountDomain
+	logger        *zap.SugaredLogger
 }
 
 func NewHandler(deps HandlerDeps) Handler {
 	log := deps.Logger.Named("webhook_handler")
 	return &handler{
-		createUser: deps.CreateUser,
-		updateUser: deps.UpdateUser,
-		logger:     log,
+		accountDomain: deps.AccountDomain,
+		logger:        log,
 	}
 }

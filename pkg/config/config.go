@@ -46,36 +46,50 @@ func (p PostgresConfig) DSN() string {
 	)
 }
 
-func Load() Config {
-	_ = godotenv.Load()
+func Load(prefix ...string) Config {
+    _ = godotenv.Load()
 
-	appEnv := getEnv("APP_ENV", "dev")
+    var servicePrefix string
+    if len(prefix) > 0 {
+        servicePrefix = prefix[0]
+    }
 
-	return Config{
-		AppEnv: appEnv,
-		HTTP: HTTPConfig{
-			Port: getEnv("APP_PORT", "8080"),
-		},
-		Postgres: PostgresConfig{
-			Host:     getEnv("POSTGRES_HOST", "localhost"),
-			Port:     getEnv("POSTGRES_PORT", "5432"),
-			User:     getEnv("POSTGRES_USER", "postgres"),
-			Password: getEnv("POSTGRES_PASSWORD", "postgres"),
-			DBName:   getEnv("POSTGRES_SERVICE_DB", "postgres"),
-			SSLMode:  getEnv("POSTGRES_SSLMODE", "disable"),
-		},
-		Zitadel: ZitadelConfig{
-			Domain:  getEnv("ZITADEL_DOMAIN_BACKEND", "http://zitadel.localhost:8080"),
-			API:     getEnv("ZITADEL_API_BACKEND", "zitadel.localhost:8080"),
-			KeyPath: getEnv("ZITADEL_KEY_PATH", "path/to/key.json"),
-			JWKSURL: getEnv("ZITADEL_JWKS_URL", "http://zitadel.localhost:8080/oauth/v2/keys"),
-		},
-	}
+    return Config{
+        AppEnv: getEnv("APP_ENV", "dev", servicePrefix),
+        HTTP: HTTPConfig{
+            Port: getEnv("APP_PORT", "8080", servicePrefix),
+        },
+        Postgres: PostgresConfig{
+            Host:     getEnv("POSTGRES_HOST", "localhost", servicePrefix),
+            Port:     getEnv("POSTGRES_PORT", "5432", servicePrefix),
+            User:     getEnv("POSTGRES_USER", "postgres", servicePrefix),
+            Password: getEnv("POSTGRES_PASSWORD", "postgres", servicePrefix),
+            DBName:   getEnv("POSTGRES_DB_NAME", "postgres", servicePrefix),
+            SSLMode:  getEnv("POSTGRES_SSLMODE", "disable", servicePrefix),
+        },
+        Zitadel: ZitadelConfig{
+            Domain:  getEnv("ZITADEL_DOMAIN_BACKEND", "http://zitadel.localhost:8080"),
+            API:     getEnv("ZITADEL_API_BACKEND", "zitadel.localhost:8080"),
+            KeyPath: getEnv("ZITADEL_KEY_PATH", "path/to/key.json"),
+            JWKSURL: getEnv("ZITADEL_JWKS_URL", "http://zitadel.localhost:8080/oauth/v2/keys"),
+        },
+    }
 }
 
-func getEnv(key, fallback string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return fallback
+// SMART getEnv: first check service specific variable (e.g. ACCOUNTS_POSTGRES_HOST),
+// if not found, check general variable (e.g. POSTGRES_HOST),
+// if not found, return fallback
+func getEnv(key, fallback string, prefix ...string) string {
+    if len(prefix) > 0 && prefix[0] != "" {
+        fullKey := fmt.Sprintf("%s_%s", prefix[0], key)
+        if value := os.Getenv(fullKey); value != "" {
+            return value
+        }
+    }
+
+    if value := os.Getenv(key); value != "" {
+        return value
+    }
+
+    return fallback
 }
