@@ -7,6 +7,7 @@ import (
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/middleware"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1/account"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1/ledger"
+	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1/transaction"
 	"go.uber.org/zap"
 )
 
@@ -40,4 +41,10 @@ func (r *Router) SetupRoutes(logger *zap.SugaredLogger) {
 	ledgerRouter.Use(middleware.AuthMiddleware(r.handler.JWKS))
 	ledger.NewRouter(ledgerRouter, r.handler.Ledger).SetupRoutes()
 
+	transactionRouter := r.router.Group("/transactions")
+	transactionRouter.Use(
+		middleware.AuthMiddleware(r.handler.JWKS),
+		middleware.UserContextMiddleware(),
+	)
+	transaction.NewRouter(transactionRouter, r.handler.Transaction, r.handler.JWKS).SetupRoutes()
 }

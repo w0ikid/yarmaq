@@ -16,9 +16,15 @@ func WithUserContext(ctx context.Context, userID string, roles []string) context
 }
 
 func GetUserID(ctx context.Context) string {
-    return ctx.Value(UserID).(string)
+	if val, ok := ctx.Value(UserID).(string); ok {
+		return val
+	}
+	return ""
 }
 
 func GetRoles(ctx context.Context) []string {
-    return ctx.Value(Roles).([]string)
+	if val, ok := ctx.Value(Roles).([]string); ok {
+		return val
+	}
+	return nil
 }

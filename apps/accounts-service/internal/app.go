@@ -76,6 +76,7 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 		return nil, fmt.Errorf("init kafka publisher: %w", err)
 	}
 
+	// outbox worker
 	outboxWorker := outbox_worker.NewWorker(
 		pg.DB(),
 		kafkaPublisher,

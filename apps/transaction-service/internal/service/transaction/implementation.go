@@ -36,10 +36,13 @@ func (s *implementation) Create(ctx context.Context, transaction models.Transact
 
 	userID := ctxkeys.GetUserID(ctx)
 
+	s.logger.Infow("fetching from_account", "id", transaction.FromAccountID)
 	fromAccount, err := s.accountsClient.GetAccount(ctx, transaction.FromAccountID.String())
 	if err != nil {
 		return nil, fmt.Errorf("get from_account: %w", err)
 	}
+	s.logger.Infow("from_account fetched", "id", transaction.FromAccountID)
+
 	if fromAccount == nil {
 		return nil, fmt.Errorf("from_account not found: %s", transaction.FromAccountID)
 	}
@@ -49,10 +52,13 @@ func (s *implementation) Create(ctx context.Context, transaction models.Transact
 		return nil, fmt.Errorf("unauthorized: account %s does not belong to user %s", transaction.FromAccountID, userID)
 	}
 
+	s.logger.Infow("fetching to_account", "id", transaction.ToAccountID)
 	toAccount, err := s.accountsClient.GetAccount(ctx, transaction.ToAccountID.String())
 	if err != nil {
 		return nil, fmt.Errorf("get to_account: %w", err)
 	}
+	s.logger.Infow("to_account fetched", "id", transaction.ToAccountID)
+
 	if toAccount == nil {
 		return nil, fmt.Errorf("to_account not found: %s", transaction.ToAccountID)
 	}

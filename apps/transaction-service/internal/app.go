@@ -20,8 +20,13 @@ import (
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1/account"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1/ledger"
+	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1/transaction"
 	"github.com/w0ikid/yarmaq/pkg/httpclient"
 	"github.com/w0ikid/yarmaq/pkg/httpclient/accounts"
+
+	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/consumers"
+	kafkamodule "github.com/w0ikid/yarmaq/pkg/kafka_module"
+	"github.com/w0ikid/yarmaq/pkg/outbox_worker"
 )
 
 type App struct {
@@ -31,6 +36,10 @@ type App struct {
 	logger    *zap.SugaredLogger
 	pg        *repo.Postgres
 	cancel    context.CancelFunc
+
+	kafkaPublisher *kafkamodule.Publisher
+	consumers      []*kafkamodule.Consumer
+	outboxWorker   *outbox_worker.Worker
 }
 
 func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (*App, error) {
@@ -61,6 +70,24 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 	appLogger.Info("zitadel client initialized", zitadelClient)
 	appLogger.Info("zitadel domain: ", cfg.Zitadel.Domain)
 	appLogger.Info("zitadel keyPath: ", cfg.Zitadel.KeyPath)
+
+	// kafka publisher
+	kafkaPublisher, err := kafkamodule.NewPublisher(kafkamodule.Config{
+		Brokers: cfg.Kafka.Brokers,
+	}, appLogger)
+	if err != nil {
+		return nil, fmt.Errorf("init kafka publisher: %w", err)
+	}
+
+	// outbox worker
+	outboxWorker := outbox_worker.NewWorker(
+		pg.DB(),
+		kafkaPublisher,
+		appLogger,
+		outbox_worker.WithInterval(3*time.Second),
+		outbox_worker.WithBatchSize(50),
+	)
+
 	// Репозитории
 	repositories := igorm.NewGormRepository(pg.DB(), appLogger)
 
@@ -77,6 +104,22 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 		appLogger,
 	)
 
+	// kafka consumers
+	transactionCreatedHandler := consumers.NewTransactionCreatedHandler(
+		&cont.TransactionDomain.ProcessSagaUsecase,
+		appLogger,
+	)
+
+	appConsumers := []*kafkamodule.Consumer{
+		kafkamodule.New(
+			cfg.Kafka.Brokers,
+			"transaction.created",
+			"transaction-service",
+			transactionCreatedHandler,
+			appLogger,
+		),
+	}
+
 	// Handlers
 	h := handlers.NewHandlers(handlers.Depedencies{
 		AccountDeps: account.HandlerDeps{
@@ -86,6 +129,10 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 		LedgerDeps: ledger.HandlerDeps{
 			LedgerDomain: cont.LedgerDomain,
 			Logger:       appLogger,
+		},
+		TransactionDeps: transaction.HandlerDeps{
+			TransactionDomain: cont.TransactionDomain,
+			Logger:            appLogger,
 		},
 		JWKS: jwksClient,
 	})
@@ -105,17 +152,26 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 	_, cancel := context.WithCancel(ctx)
 
 	return &App{
-		fapp:      fapp,
-		addr:      ":" + cfg.HTTP.Port,
-		container: cont,
-		logger:    appLogger,
-		pg:        pg,
-		cancel:    cancel,
+		fapp:           fapp,
+		addr:           ":" + cfg.HTTP.Port,
+		container:      cont,
+		logger:         appLogger,
+		pg:             pg,
+		cancel:         cancel,
+		kafkaPublisher: kafkaPublisher,
+		outboxWorker:   outboxWorker,
+		consumers:      appConsumers,
 	}, nil
 }
 
 // Start запускает HTTP сервер
-func (a *App) Start() error {
+func (a *App) Start(ctx context.Context) error {
+	go a.outboxWorker.Run(ctx)
+
+	for _, c := range a.consumers {
+		go c.Run(ctx)
+	}
+
 	a.logger.Info("starting HTTP server", zap.String("addr", a.addr))
 	if err := a.fapp.Listen(a.addr); err != nil {
 		return fmt.Errorf("fiber server: %w", err)
@@ -125,6 +181,12 @@ func (a *App) Start() error {
 
 func (a *App) Stop(ctx context.Context) error {
 	a.cancel()
+
+	for _, c := range a.consumers {
+		if err := c.Close(); err != nil {
+			a.logger.Errorw("consumer close failed", zap.Error(err))
+		}
+	}
 
 	shutdownCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()

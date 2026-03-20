@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"time"
+
 	"github.com/w0ikid/yarmaq/pkg/zitadel"
 )
 
@@ -16,7 +18,9 @@ type Client struct {
 
 func New(baseURL string, zitadelClient *zitadel.Client) *Client {
 	return &Client{
-		http:    &http.Client{},
+		http: &http.Client{
+			Timeout: 10 * time.Second,
+		},
 		zitadel: zitadelClient,
 		BaseURL: baseURL,
 	}
