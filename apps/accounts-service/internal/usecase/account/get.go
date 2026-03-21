@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/service/account"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase"
 	"github.com/w0ikid/yarmaq/pkg/models"
 )
@@ -15,6 +16,13 @@ type GetAccountUsecase struct {
 		GetByID(ctx context.Context, id uuid.UUID) (*models.Account, error)
 		GetByNumber(ctx context.Context, number string) (*models.Account, error)
 		GetByUserID(ctx context.Context, userID uuid.UUID) (*models.Account, error)
+	}
+}
+
+func NewGetAccountUsecase(base usecase.BaseUsecase, accountService account.Service) GetAccountUsecase {
+	return GetAccountUsecase{
+		BaseUsecase:    base,
+		AccountService: accountService,
 	}
 }
 

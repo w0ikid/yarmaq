@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/service/outbox"
+	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/service/transaction"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase"
 	"github.com/w0ikid/yarmaq/pkg/models"
 )
@@ -15,6 +17,14 @@ type CreateTransactionUsecase struct {
 	}
 	OutboxService interface {
 		Create(ctx context.Context, event models.Outbox) (*models.Outbox, error)
+	}
+}
+
+func NewCreateTransactionUsecase(base usecase.BaseUsecase, transactionService transaction.Service, outboxService outbox.Service) CreateTransactionUsecase {
+	return CreateTransactionUsecase{
+		BaseUsecase:        base,
+		TransactionService: transactionService,
+		OutboxService:      outboxService,
 	}
 }
 

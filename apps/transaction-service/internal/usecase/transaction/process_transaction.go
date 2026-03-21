@@ -4,6 +4,9 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/service/account"
+	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/service/saga"
+	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/service/transaction"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase"
 	"github.com/w0ikid/yarmaq/pkg/models"
 )
@@ -17,9 +20,23 @@ type ProcessTransactionSagaUsecase struct {
 	TransactionService interface {
 		UpdateStatus(ctx context.Context, id uuid.UUID, status string) error
 	}
-	AccountsClient interface {
+	AccountService interface {
 		Debit(ctx context.Context, accountID string, transactionID uuid.UUID, amount int64) error
 		Credit(ctx context.Context, accountID string, transactionID uuid.UUID, amount int64) error
+	}
+}
+
+func NewProcessTransactionSagaUsecase(
+	base usecase.BaseUsecase,
+	sagaService saga.Service,
+	transactionService transaction.Service,
+	accountService account.Service,
+) ProcessTransactionSagaUsecase {
+	return ProcessTransactionSagaUsecase{
+		BaseUsecase:        base,
+		SagaService:        sagaService,
+		TransactionService: transactionService,
+		AccountService:     accountService,
 	}
 }
 
@@ -36,7 +53,7 @@ func (uc *ProcessTransactionSagaUsecase) Execute(ctx context.Context, event mode
 		return err
 	}
 
-	err = uc.AccountsClient.Debit(ctx, event.FromAccountID, txID, event.Amount)
+	err = uc.AccountService.Debit(ctx, event.FromAccountID, txID, event.Amount)
 	if err != nil {
 		errStr := err.Error()
 		uc.SagaService.UpdateStepStatus(ctx, holdStep.ID, models.SagaStatusFailed, &errStr)
@@ -61,7 +78,7 @@ func (uc *ProcessTransactionSagaUsecase) Execute(ctx context.Context, event mode
 
 	uc.TransactionService.UpdateStatus(ctx, txID, models.TransactionStatusDepositing)
 
-	err = uc.AccountsClient.Credit(ctx, event.ToAccountID, txID, event.Amount)
+	err = uc.AccountService.Credit(ctx, event.ToAccountID, txID, event.Amount)
 	if err != nil {
 		errStr := err.Error()
 		if err := uc.SagaService.UpdateStepStatus(ctx, depositStep.ID, models.SagaStatusFailed, &errStr); err != nil {
@@ -95,7 +112,7 @@ func (uc *ProcessTransactionSagaUsecase) compensateHold(ctx context.Context, acc
 		return
 	}
 
-	err = uc.AccountsClient.Credit(ctx, accountID, txID, amount)
+	err = uc.AccountService.Credit(ctx, accountID, txID, amount)
 	if err != nil {
 		errStr := err.Error()
 		uc.Logger.Errorw("compensation failed", "error", err)

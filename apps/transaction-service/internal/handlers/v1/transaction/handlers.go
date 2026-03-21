@@ -44,7 +44,7 @@ func (h *handler) CreateTransaction(c *fiber.Ctx) error {
 		IdempotencyKey: req.IdempotencyKey,
 	}
 
-	created, err := h.domain.CreateUsecase.Execute(c.Context(), tx)
+	created, err := h.domain.CreateUsecase.Execute(c.UserContext(), tx)
 	if err != nil {
 		h.logger.Errorw("failed to create transaction", "error", err)
 		return c.Status(500).JSON(fiber.Map{"error": "Internal server error"})

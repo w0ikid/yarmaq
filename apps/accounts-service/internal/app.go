@@ -117,7 +117,14 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	})
-	fapp.Use(recover.New())
+	fapp.Use(recover.New(recover.Config{
+		EnableStackTrace: true,
+		StackTraceHandler: func(c *fiber.Ctx, e interface{}) {
+			appLogger.Errorw("panic recovered", "error", e)
+		},
+	}))
+
+	
 
 	// Fiber router
 	router := handlers.NewRouter(fapp, h)

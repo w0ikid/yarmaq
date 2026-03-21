@@ -2,9 +2,12 @@ package account
 
 import (
 	"context"
+	"encoding/json"
+
+	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/service/account"
+	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/service/outbox"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase"
 	"github.com/w0ikid/yarmaq/pkg/models"
-	"encoding/json"
 )
 
 type CreateAccountUsecase struct {
@@ -15,6 +18,14 @@ type CreateAccountUsecase struct {
 
 	OutboxService interface {
 		Create(ctx context.Context, event models.Outbox) (*models.Outbox, error)
+	}
+}
+
+func NewCreateAccountUsecase(base usecase.BaseUsecase, accountService account.Service, outboxService outbox.Service) CreateAccountUsecase {
+	return CreateAccountUsecase{
+		BaseUsecase:    base,
+		AccountService: accountService,
+		OutboxService:  outboxService,
 	}
 }
 

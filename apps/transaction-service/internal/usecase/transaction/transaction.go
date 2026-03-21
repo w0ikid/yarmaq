@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/service/account"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/service/outbox"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/service/saga"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/service/transaction"
@@ -14,22 +15,11 @@ type TransactionDomain struct {
 	ProcessSagaUsecase ProcessTransactionSagaUsecase
 }
 
-func NewDomain(baseusecase usecase.BaseUsecase, transactionService transaction.Service, outboxService outbox.Service, sagaService saga.Service) TransactionDomain {
+func NewDomain(baseusecase usecase.BaseUsecase, transactionService transaction.Service, outboxService outbox.Service, sagaService saga.Service, accountService account.Service) TransactionDomain {
 	baseusecase.Logger = baseusecase.Logger.Named("transaction_domain")
 	return TransactionDomain{
-		CreateUsecase: CreateTransactionUsecase{
-			BaseUsecase:        baseusecase,
-			TransactionService: transactionService,
-			OutboxService:      outboxService,
-		},
-		GetUsecase: GetTransactionUsecase{
-			BaseUsecase:        baseusecase,
-			TransactionService: transactionService,
-		},
-		ProcessSagaUsecase: ProcessTransactionSagaUsecase{
-			BaseUsecase:        baseusecase,
-			SagaService:        sagaService,
-			TransactionService: transactionService,
-		},
+		CreateUsecase:      NewCreateTransactionUsecase(baseusecase, transactionService, outboxService),
+		GetUsecase:         NewGetTransactionUsecase(baseusecase, transactionService),
+		ProcessSagaUsecase: NewProcessTransactionSagaUsecase(baseusecase, sagaService, transactionService, accountService),
 	}
 }

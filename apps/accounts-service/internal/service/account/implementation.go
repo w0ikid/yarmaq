@@ -67,29 +67,34 @@ func (s *implementation) GetByUserID(ctx context.Context, userID uuid.UUID) (*mo
 
 func (s *implementation) UpdateBalance(ctx context.Context, accountID uuid.UUID, amount int64, operationType string, referenceID *uuid.UUID) error {
     s.logger.Infow("updating balance", "account_id", accountID, "amount", amount, "op", operationType)
-
+    
     acc, err := s.repo.GetByID(ctx, accountID)
     if err != nil {
+        s.logger.Errorw("failed to get account", "error", err)
         return err
     }
     if acc == nil {
         return fmt.Errorf("account not found: %s", accountID)
     }
-
+    
     acc.Balance += amount
     if acc.Balance < 0 {
         return fmt.Errorf("insufficient funds: %s", accountID)
     }
-
+    
     if _, err = s.repo.Update(ctx, *acc); err != nil {
+        s.logger.Errorw("failed to update account", "error", err)
         return err
     }
-
+    
     _, err = s.ledgerRepo.Create(ctx, models.Ledger{
         AccountID:     accountID,
         Amount:        amount,
         OperationType: operationType,
         ReferenceID:   referenceID,
     })
+    if err != nil {
+        s.logger.Errorw("failed to create ledger", "error", err)
+    }
     return err
 }

@@ -5,8 +5,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/middleware"
-	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1/account"
-	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1/ledger"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1/transaction"
 	"go.uber.org/zap"
 )
@@ -30,17 +28,6 @@ func (r *Router) SetupRoutes(logger *zap.SugaredLogger) {
 	})
 
 	// routes
-	accountsRouter := r.router.Group("/accounts")
-	accountsRouter.Use(
-		middleware.AuthMiddleware(r.handler.JWKS),
-		middleware.UserContextMiddleware(),
-	)
-	account.NewRouter(accountsRouter, r.handler.Account).SetupRoutes()
-
-	ledgerRouter := r.router.Group("/ledger")
-	ledgerRouter.Use(middleware.AuthMiddleware(r.handler.JWKS))
-	ledger.NewRouter(ledgerRouter, r.handler.Ledger).SetupRoutes()
-
 	transactionRouter := r.router.Group("/transactions")
 	transactionRouter.Use(
 		middleware.AuthMiddleware(r.handler.JWKS),

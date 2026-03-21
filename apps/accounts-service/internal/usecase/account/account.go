@@ -15,18 +15,8 @@ type AccountDomain struct {
 func NewDomain(baseusecase usecase.BaseUsecase, accountService account.Service, outbox outbox.Service) AccountDomain {
 	baseusecase.Logger = baseusecase.Logger.Named("account_domain")
 	return AccountDomain{
-		CreateUsecase: CreateAccountUsecase{
-			BaseUsecase:    baseusecase,
-			AccountService: accountService,
-			OutboxService:  outbox,
-		},
-		GetAccountUsecase: GetAccountUsecase{
-			BaseUsecase:    baseusecase,
-			AccountService: accountService,
-		},
-		UpdateBalanceUsecase: UpdateBalanceUsecase{
-			BaseUsecase:    baseusecase,
-			AccountService: accountService,
-		},
+		CreateUsecase:        NewCreateAccountUsecase(baseusecase, accountService, outbox),
+		GetAccountUsecase:    NewGetAccountUsecase(baseusecase, accountService),
+		UpdateBalanceUsecase: NewUpdateBalanceUsecase(baseusecase, accountService, outbox),
 	}
 }

@@ -12,9 +12,6 @@ type LedgerDomain struct {
 func NewDomain(baseusecase usecase.BaseUsecase, ledgerService ledger.Service) LedgerDomain {
 	baseusecase.Logger = baseusecase.Logger.Named("ledger_domain")
 	return LedgerDomain{
-		GetLedgerUsecase: GetLedgerUsecase{
-			BaseUsecase:   baseusecase,
-			LedgerService: ledgerService,
-		},
+		GetLedgerUsecase: NewGetLedgerUsecase(baseusecase, ledgerService),
 	}
 }

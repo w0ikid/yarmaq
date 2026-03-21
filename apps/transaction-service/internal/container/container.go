@@ -6,8 +6,6 @@ import (
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/repo"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/service"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase"
-	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase/account"
-	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase/ledger"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase/outbox"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase/transaction"
 	"github.com/w0ikid/yarmaq/pkg/httpclient/accounts"
@@ -20,8 +18,6 @@ type Container struct {
 
 	Services *service.Service
 
-	AccountDomain     account.AccountDomain
-	LedgerDomain      ledger.LedgerDomain
 	OutboxDomain      outbox.OutboxDomain
 	TransactionDomain transaction.TransactionDomain
 }
@@ -45,12 +41,8 @@ func NewContainer(
 
 	return &Container{
 		logger: logger,
-
 		Services: services,
-
-		AccountDomain:     account.NewDomain(baseusecase, services.AccountService),
-		LedgerDomain:      ledger.NewDomain(baseusecase, services.LedgerService),
 		OutboxDomain:      outbox.NewDomain(baseusecase, services.OutboxService),
-		TransactionDomain: transaction.NewDomain(baseusecase, services.TransactionService, services.OutboxService, services.SagaService),
+		TransactionDomain: transaction.NewDomain(baseusecase, services.TransactionService, services.OutboxService, services.SagaService, services.AccountService),
 	}
 }

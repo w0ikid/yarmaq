@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/service/ledger"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase"
 	"github.com/w0ikid/yarmaq/pkg/models"
 )
@@ -13,6 +14,13 @@ type GetLedgerUsecase struct {
 	LedgerService interface {
 		GetByAccountID(ctx context.Context, accountID uuid.UUID) ([]models.Ledger, error)
 		GetAll(ctx context.Context) ([]models.Ledger, error)
+	}
+}
+
+func NewGetLedgerUsecase(base usecase.BaseUsecase, ledgerService ledger.Service) GetLedgerUsecase {
+	return GetLedgerUsecase{
+		BaseUsecase:   base,
+		LedgerService: ledgerService,
 	}
 }
 

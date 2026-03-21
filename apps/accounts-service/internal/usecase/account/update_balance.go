@@ -3,9 +3,12 @@ package account
 import (
 	"context"
 	"encoding/json"
-	"github.com/w0ikid/yarmaq/pkg/models"
+
 	"github.com/google/uuid"
+	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/service/account"
+	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/service/outbox"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase"
+	"github.com/w0ikid/yarmaq/pkg/models"
 )
 
 type UpdateBalanceUsecase struct {
@@ -15,6 +18,14 @@ type UpdateBalanceUsecase struct {
 	}
 	OutboxService interface {
 		Create(ctx context.Context, event models.Outbox) (*models.Outbox, error)
+	}
+}
+
+func NewUpdateBalanceUsecase(base usecase.BaseUsecase, accountService account.Service, outboxService outbox.Service) UpdateBalanceUsecase {
+	return UpdateBalanceUsecase{
+		BaseUsecase:    base,
+		AccountService: accountService,
+		OutboxService:  outboxService,
 	}
 }
 

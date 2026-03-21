@@ -35,7 +35,7 @@ func (s *implementation) Create(ctx context.Context, transaction models.Transact
 	s.logger.Infow("creating transaction", "from", transaction.FromAccountID, "to", transaction.ToAccountID, "amount", transaction.Amount)
 
 	userID := ctxkeys.GetUserID(ctx)
-
+	s.logger.Infow("got userID from context", "userID", userID)
 	s.logger.Infow("fetching from_account", "id", transaction.FromAccountID)
 	fromAccount, err := s.accountsClient.GetAccount(ctx, transaction.FromAccountID.String())
 	if err != nil {
@@ -48,6 +48,7 @@ func (s *implementation) Create(ctx context.Context, transaction models.Transact
 	}
 
 	// Validate ownership
+	s.logger.Infow("checking ownership", "userID", userID, "account.UserID", fromAccount.UserID)
 	if fromAccount.UserID != userID {
 		return nil, fmt.Errorf("unauthorized: account %s does not belong to user %s", transaction.FromAccountID, userID)
 	}
