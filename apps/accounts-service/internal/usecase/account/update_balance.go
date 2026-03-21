@@ -51,7 +51,7 @@ func (uc *UpdateBalanceUsecase) Execute(ctx context.Context, accountID uuid.UUID
 	})
 
 	if _, err = uc.OutboxService.Create(txCtx, models.Outbox{
-		EventType:   "BalanceUpdated",
+		EventType:   "account.balance.updated",
 		AggregateID: accountID,
 		Payload:     payload,
 	}); err != nil {

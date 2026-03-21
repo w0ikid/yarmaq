@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/w0ikid/yarmaq/pkg/ctxkeys"
+	"github.com/w0ikid/yarmaq/pkg/errs"
 	"github.com/w0ikid/yarmaq/pkg/httpclient/accounts"
 	"github.com/w0ikid/yarmaq/pkg/models"
 	"go.uber.org/zap"
@@ -34,9 +35,15 @@ func NewService(repo TransactionRepo, accountsClient *accounts.Client, logger *z
 func (s *implementation) Create(ctx context.Context, transaction models.Transaction) (*models.Transaction, error) {
 	s.logger.Infow("creating transaction", "from", transaction.FromAccountID, "to", transaction.ToAccountID, "amount", transaction.Amount)
 
+	if transaction.Amount <= 0 {
+		return nil, fmt.Errorf("%w: transaction amount must be positive", errs.ErrValidation)
+	}
+
+	if transaction.FromAccountID == transaction.ToAccountID {
+		return nil, fmt.Errorf("%w: from and to accounts cannot be the same", errs.ErrValidation)
+	}
+
 	userID := ctxkeys.GetUserID(ctx)
-	s.logger.Infow("got userID from context", "userID", userID)
-	s.logger.Infow("fetching from_account", "id", transaction.FromAccountID)
 	fromAccount, err := s.accountsClient.GetAccount(ctx, transaction.FromAccountID.String())
 	if err != nil {
 		return nil, fmt.Errorf("get from_account: %w", err)
@@ -44,13 +51,13 @@ func (s *implementation) Create(ctx context.Context, transaction models.Transact
 	s.logger.Infow("from_account fetched", "id", transaction.FromAccountID)
 
 	if fromAccount == nil {
-		return nil, fmt.Errorf("from_account not found: %s", transaction.FromAccountID)
+		return nil, fmt.Errorf("%w: from_account not found: %s", errs.ErrNotFound, transaction.FromAccountID)
 	}
 
 	// Validate ownership
 	s.logger.Infow("checking ownership", "userID", userID, "account.UserID", fromAccount.UserID)
 	if fromAccount.UserID != userID {
-		return nil, fmt.Errorf("unauthorized: account %s does not belong to user %s", transaction.FromAccountID, userID)
+		return nil, fmt.Errorf("%w: account %s does not belong to user %s", errs.ErrUnauthorized, transaction.FromAccountID, userID)
 	}
 
 	s.logger.Infow("fetching to_account", "id", transaction.ToAccountID)
@@ -61,19 +68,11 @@ func (s *implementation) Create(ctx context.Context, transaction models.Transact
 	s.logger.Infow("to_account fetched", "id", transaction.ToAccountID)
 
 	if toAccount == nil {
-		return nil, fmt.Errorf("to_account not found: %s", transaction.ToAccountID)
+		return nil, fmt.Errorf("%w: to_account not found: %s", errs.ErrNotFound, transaction.ToAccountID)
 	}
 
 	if fromAccount.Currency != toAccount.Currency {
-		return nil, fmt.Errorf("accounts have different currencies: %s vs %s", fromAccount.Currency, toAccount.Currency)
-	}
-
-	if transaction.Amount <= 0 {
-		return nil, fmt.Errorf("transaction amount must be positive")
-	}
-
-	if transaction.FromAccountID == transaction.ToAccountID {
-		return nil, fmt.Errorf("from and to accounts cannot be the same")
+		return nil, fmt.Errorf("%w: accounts have different currencies: %s vs %s", errs.ErrValidation, fromAccount.Currency, toAccount.Currency)
 	}
 
 	transaction.Currency = fromAccount.Currency
@@ -104,7 +103,7 @@ func (s *implementation) UpdateStatus(ctx context.Context, id uuid.UUID, status 
 		return err
 	}
 	if tx == nil {
-		return fmt.Errorf("transaction not found: %s", id)
+		return fmt.Errorf("%w: transaction not found: %s", errs.ErrNotFound, id)
 	}
 
 	tx.Status = status

@@ -25,7 +25,10 @@ func main() {
 	if cfg.AppEnv == "prod" {
 		logger, err = zap.NewProduction()
 	} else {
-		logger, err = zap.NewDevelopment()
+		logger, err = zap.NewDevelopment(
+			zap.WithCaller(false),
+			zap.AddStacktrace(zap.ErrorLevel + 1),
+		)
 	}
 	if err != nil {
 		log.Fatalf("failed to init logger: %v", err)

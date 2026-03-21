@@ -32,27 +32,26 @@ func New(brokers []string, topic, groupID string, handler Handler, logger *zap.S
 }
 
 func (c *Consumer) Run(ctx context.Context) {
-	c.logger.Info("consumer started")
-	for {
-		msg, err := c.reader.FetchMessage(ctx)
-		if err != nil {
-			if ctx.Err() != nil {
-				c.logger.Info("consumer stopped")
-				return
-			}
-			c.logger.Errorw("fetch message failed", "err", err)
-			continue
-		}
-
-		if err := c.handler.Handle(ctx, msg); err != nil {
-			c.logger.Errorw("handle message failed", "err", err)
-			continue // не коммитим — обработаем снова
-		}
-
-		if err := c.reader.CommitMessages(ctx, msg); err != nil {
-			c.logger.Errorw("commit message failed", "err", err)
-		}
-	}
+    c.logger.Info("consumer started")
+    for {
+        msg, err := c.reader.FetchMessage(ctx)
+        if err != nil {
+            if ctx.Err() != nil {
+                c.logger.Info("consumer stopped")
+                return
+            }
+            c.logger.Errorw("fetch message failed", "err", err)
+            continue
+        }
+        c.logger.Infow("message fetched", "topic", msg.Topic, "offset", msg.Offset) // <- добавь
+        if err := c.handler.Handle(ctx, msg); err != nil {
+            c.logger.Errorw("handle message failed", "err", err)
+            continue
+        }
+        if err := c.reader.CommitMessages(ctx, msg); err != nil {
+            c.logger.Errorw("commit message failed", "err", err)
+        }
+    }
 }
 
 func (c *Consumer) Close() error {

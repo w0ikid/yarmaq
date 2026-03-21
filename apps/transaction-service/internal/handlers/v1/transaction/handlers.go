@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase/transaction"
+	"github.com/w0ikid/yarmaq/pkg/errs"
 	"github.com/w0ikid/yarmaq/pkg/models"
 	"go.uber.org/zap"
 )
@@ -47,7 +48,7 @@ func (h *handler) CreateTransaction(c *fiber.Ctx) error {
 	created, err := h.domain.CreateUsecase.Execute(c.UserContext(), tx)
 	if err != nil {
 		h.logger.Errorw("failed to create transaction", "error", err)
-		return c.Status(500).JSON(fiber.Map{"error": "Internal server error"})
+		return errs.HandleHTTP(c, err)
 	}
 
 	return c.Status(201).JSON(mapToResponse(created))
