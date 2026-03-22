@@ -44,9 +44,14 @@ func (uc *CreateAccountUsecase) Execute(ctx context.Context, account models.Acco
 		return nil, err
 	}
 
+	var userID string
+	if createdAccount.UserID != nil {
+		userID = *createdAccount.UserID
+	}
+
 	payload, err := json.Marshal(models.AccountCreatedEvent{
 		ID:     createdAccount.ID.String(),
-		UserID: createdAccount.UserID,
+		UserID: userID,
 	})
 
 	// outbox event

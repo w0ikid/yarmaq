@@ -16,6 +16,9 @@ type HandlerDeps struct {
 
 type Handler interface {
 	CreateTransaction(c *fiber.Ctx) error
+	CreateTransfer(c *fiber.Ctx) error
+	CreateDeposit(c *fiber.Ctx) error
+	CreateWithdraw(c *fiber.Ctx) error
 	GetTransaction(c *fiber.Ctx) error
 }
 
@@ -37,13 +40,59 @@ func (h *handler) CreateTransaction(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
-	tx := models.Transaction{
+	return h.createTransaction(c, models.Transaction{
+		Type:            req.Type,
 		ToAccountNumber: req.ToAccountNumber,
 		Amount:          req.Amount,
 		Currency:        req.Currency,
 		IdempotencyKey:  req.IdempotencyKey,
+	})
+}
+
+func (h *handler) CreateTransfer(c *fiber.Ctx) error {
+	var req TransferRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
+	return h.createTransaction(c, models.Transaction{
+		Type:            models.TransactionTypeTransfer,
+		ToAccountNumber: req.ToAccountNumber,
+		Amount:          req.Amount,
+		Currency:        req.Currency,
+		IdempotencyKey:  req.IdempotencyKey,
+	})
+}
+
+func (h *handler) CreateDeposit(c *fiber.Ctx) error {
+	var req DepositRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	return h.createTransaction(c, models.Transaction{
+		Type:           models.TransactionTypeDeposit,
+		Amount:         req.Amount,
+		Currency:       req.Currency,
+		IdempotencyKey: req.IdempotencyKey,
+	})
+}
+
+func (h *handler) CreateWithdraw(c *fiber.Ctx) error {
+	var req WithdrawRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	return h.createTransaction(c, models.Transaction{
+		Type:           models.TransactionTypeWithdrawal,
+		Amount:         req.Amount,
+		Currency:       req.Currency,
+		IdempotencyKey: req.IdempotencyKey,
+	})
+}
+
+func (h *handler) createTransaction(c *fiber.Ctx, tx models.Transaction) error {
 	created, err := h.domain.CreateUsecase.Execute(c.UserContext(), tx)
 	if err != nil {
 		h.logger.Errorw("failed to create transaction", "error", err)
@@ -75,6 +124,7 @@ func (h *handler) GetTransaction(c *fiber.Ctx) error {
 func mapToResponse(tx *models.Transaction) TransactionResponse {
 	resp := TransactionResponse{
 		ID:             tx.ID,
+		Type:           tx.Type,
 		FromAccountID:  tx.FromAccountID,
 		ToAccountID:    tx.ToAccountID,
 		Amount:         tx.Amount,

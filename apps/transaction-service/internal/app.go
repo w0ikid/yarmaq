@@ -107,6 +107,10 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 		&cont.TransactionDomain.ProcessSagaUsecase,
 		appLogger,
 	)
+	accountCreatedHandler := consumers.NewAccountCreatedHandler(
+		&cont.TransactionDomain.CreateUsecase,
+		appLogger,
+	)
 
 	appConsumers := []*kafkamodule.Consumer{
 		kafkamodule.New(
@@ -114,6 +118,13 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 			"transaction.created",
 			"transaction-service",
 			transactionCreatedHandler,
+			appLogger,
+		),
+		kafkamodule.New(
+			cfg.Kafka.Brokers,
+			"account.created",
+			"transaction-service",
+			accountCreatedHandler,
 			appLogger,
 		),
 	}

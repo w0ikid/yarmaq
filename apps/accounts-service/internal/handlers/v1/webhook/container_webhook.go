@@ -75,9 +75,9 @@ func (h *handler) handleUserCreated(c *fiber.Ctx, req WebhookRequest) error {
 	h.logger.Infow("processing user created webhook", "zitadel_user_id", zitadelUserID)
 
 	account := models.Account{
-		UserID:   resp.UserID,
+		UserID:   &zitadelUserID,
+		Type:     models.AccountTypeUser,
 		Currency: "KZT",
-		Balance:  1000, // initial balance for new users
 	}
 
 	_, err := h.accountDomain.CreateUsecase.Execute(c.UserContext(), account)

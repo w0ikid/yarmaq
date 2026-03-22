@@ -9,6 +9,7 @@ import (
 
 type Transaction struct {
 	ID             uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid();column:id" json:"id"`
+	Type           string     `gorm:"type:varchar(20);not null;default:'TRANSFER';column:type" json:"type"`
 	FromAccountID  uuid.UUID  `gorm:"type:uuid;not null;column:from_account_id" json:"from_account_id"`
 	ToAccountID    uuid.UUID  `gorm:"type:uuid;not null;column:to_account_id" json:"to_account_id"`
 	Amount         int64      `gorm:"type:bigint;not null;column:amount" json:"amount"`
@@ -22,6 +23,7 @@ type Transaction struct {
 func (t Transaction) ToDTO() models.Transaction {
 	return models.Transaction{
 		ID:             t.ID,
+		Type:           t.Type,
 		FromAccountID:  t.FromAccountID,
 		ToAccountID:    t.ToAccountID,
 		Amount:         t.Amount,
@@ -36,6 +38,7 @@ func (t Transaction) ToDTO() models.Transaction {
 func FromTransactionDTO(t models.Transaction) Transaction {
 	return Transaction{
 		ID:             t.ID,
+		Type:           t.Type,
 		FromAccountID:  t.FromAccountID,
 		ToAccountID:    t.ToAccountID,
 		Amount:         t.Amount,

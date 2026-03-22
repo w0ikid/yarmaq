@@ -2,7 +2,8 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS accounts (
     id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id    VARCHAR(255) NOT NULL, -- zitadel
+    user_id    VARCHAR(255), -- zitadel, nullable for system accounts
+    type       VARCHAR(20) NOT NULL DEFAULT 'USER',
     number     VARCHAR(30) NOT NULL UNIQUE,
     balance    BIGINT NOT NULL DEFAULT 0,
     currency   VARCHAR(3) NOT NULL DEFAULT 'KZT',
@@ -13,6 +14,12 @@ CREATE TABLE IF NOT EXISTS accounts (
 );
 
 CREATE SEQUENCE IF NOT EXISTS account_number_seq START 1;
+
+INSERT INTO accounts (id, user_id, type, number, currency, balance) VALUES
+  ('00000000-0000-0000-0000-000000000001', NULL, 'SYSTEM', 'KZ00020010000000', 'KZT', 100000000),
+  ('00000000-0000-0000-0000-000000000002', NULL, 'SYSTEM', 'KZ00020020000000', 'USD', 100000000),
+  ('00000000-0000-0000-0000-000000000003', NULL, 'SYSTEM', 'KZ00020030000000', 'EUR', 100000000);
+
 -- +goose StatementEnd
 
 -- +goose Down

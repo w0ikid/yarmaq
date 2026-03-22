@@ -105,6 +105,19 @@ func (r *AccountRepo) GetByUserIDAndCurrency(ctx context.Context, userID string,
 	return &dto, nil
 }
 
+func (r *AccountRepo) GetByTypeAndCurrency(ctx context.Context, accountType string, currency string) (*models.Account, error) {
+	var e entity.Account
+	err := r.tx(ctx).Where("type = ? AND currency = ?", accountType, currency).First(&e).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	dto := e.ToDTO()
+	return &dto, nil
+}
+
 func (r *AccountRepo) GetAllByUserID(ctx context.Context, userID string) ([]models.Account, error) {
 	var entities []entity.Account
 	if err := r.tx(ctx).Where("user_id = ?", userID).Order("created_at DESC").Find(&entities).Error; err != nil {

@@ -2,7 +2,6 @@ package account
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase/account"
 	"github.com/w0ikid/yarmaq/pkg/ctxkeys"
 	"github.com/w0ikid/yarmaq/pkg/errs"
@@ -18,9 +17,9 @@ type HandlerDeps struct {
 type Handler interface {
 	CreateAccount(c *fiber.Ctx) error
 	GetMyAccounts(c *fiber.Ctx) error
+	GetAccountsByUserID(c *fiber.Ctx) error
 	GetAccountByNumberAndCurrency(c *fiber.Ctx) error
 	GetAccountByUserIDAndCurrency(c *fiber.Ctx) error
-	GetAccount(c *fiber.Ctx) error
 }
 
 type handler struct {
@@ -41,8 +40,10 @@ func (h *handler) CreateAccount(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
+	userID := ctxkeys.GetUserID(c.UserContext())
 	acc := models.Account{
-		UserID:   ctxkeys.GetUserID(c.UserContext()),
+		UserID:   &userID,
+		Type:     models.AccountTypeUser,
 		Currency: req.Currency,
 	}
 
@@ -55,28 +56,25 @@ func (h *handler) CreateAccount(c *fiber.Ctx) error {
 	return c.Status(201).JSON(created)
 }
 
-func (h *handler) GetAccount(c *fiber.Ctx) error {
-	idStr := c.Params("id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid account ID"})
-	}
-
-	acc, err := h.domain.GetAccountUsecase.ExecuteByID(c.Context(), id)
-	if err != nil {
-		return errs.HandleHTTP(c, err)
-	}
-	if acc == nil {
-		return errs.HandleHTTP(c, errs.ErrNotFound)
-	}
-
-	return c.Status(200).JSON(acc)
-}
-
 func (h *handler) GetMyAccounts(c *fiber.Ctx) error {
 	accounts, err := h.domain.GetAccountUsecase.ExecuteAllByUserID(c.Context(), ctxkeys.GetUserID(c.UserContext()))
 	if err != nil {
 		h.logger.Errorw("failed to get user accounts", "error", err)
+		return errs.HandleHTTP(c, err)
+	}
+
+	return c.Status(200).JSON(accounts)
+}
+
+func (h *handler) GetAccountsByUserID(c *fiber.Ctx) error {
+	userID := c.Query("user_id")
+	if userID == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "user_id is required"})
+	}
+
+	accounts, err := h.domain.GetAccountUsecase.ExecuteAllByUserID(c.Context(), userID)
+	if err != nil {
+		h.logger.Errorw("failed to get accounts by user id", "user_id", userID, "error", err)
 		return errs.HandleHTTP(c, err)
 	}
 

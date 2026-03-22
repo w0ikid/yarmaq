@@ -110,6 +110,43 @@ func (c *Client) GetAccountByUserIDAndCurrency(ctx context.Context, userID strin
 	return &account, nil
 }
 
+func (c *Client) GetAccountByTypeAndCurrency(ctx context.Context, accountType string, currency string) (*models.AccountResponse, error) {
+	query := url.Values{}
+	query.Set("type", accountType)
+	query.Set("currency", currency)
+
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"GET",
+		fmt.Sprintf("%s/api/v1/internal/accounts/by-type-currency?%s", c.base.BaseURL, query.Encode()),
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.base.Do(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("accounts-service returned %d", resp.StatusCode)
+	}
+
+	var account models.AccountResponse
+	if err := json.NewDecoder(resp.Body).Decode(&account); err != nil {
+		return nil, err
+	}
+
+	return &account, nil
+}
+
+func (c *Client) GetSystemAccountByCurrency(ctx context.Context, currency string) (*models.AccountResponse, error) {
+	return c.GetAccountByTypeAndCurrency(ctx, models.AccountTypeSystem, currency)
+}
+
 func (c *Client) UpdateBalance(ctx context.Context, id string, req models.UpdateBalanceRequest) error {
 	body, err := json.Marshal(req)
 	if err != nil {

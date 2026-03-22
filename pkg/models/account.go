@@ -5,10 +5,17 @@ import (
 
 	"github.com/google/uuid"
 )
+
+const (
+	AccountTypeUser   = "USER"
+	AccountTypeSystem = "SYSTEM"
+)
+
 // MODEL
 type Account struct {
 	ID        uuid.UUID  `json:"id"`
-	UserID    string     `json:"user_id"`
+	UserID    *string    `json:"user_id"`
+	Type      string     `json:"type"`
 	Number    string     `json:"number"`
 	Balance   int64      `json:"balance"`
 	Currency  string     `json:"currency"`
@@ -30,7 +37,7 @@ type UpdateBalanceRequest struct {
 
 type AccountResponse struct {
 	ID        uuid.UUID `json:"id"`
-	UserID    string    `json:"user_id"`
+	UserID    string    `json:"user_id,omitempty"`
 	Number    string    `json:"number"`
 	Balance   int64     `json:"balance"`
 	Currency  string    `json:"currency"`

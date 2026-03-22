@@ -17,6 +17,7 @@ type Service interface {
 	GetByNumberAndCurrency(ctx context.Context, number string, currency string) (*models.Account, error)
 	GetByUserID(ctx context.Context, userID uuid.UUID) (*models.Account, error)
 	GetByUserIDAndCurrency(ctx context.Context, userID string, currency string) (*models.Account, error)
+	GetByTypeAndCurrency(ctx context.Context, accountType string, currency string) (*models.Account, error)
 	GetAllByUserID(ctx context.Context, userID string) ([]models.Account, error)
 	UpdateBalance(ctx context.Context, accountID uuid.UUID, amount int64, operationType string, referenceID *uuid.UUID) error
 }
@@ -75,6 +76,10 @@ func (s *implementation) GetByUserID(ctx context.Context, userID uuid.UUID) (*mo
 
 func (s *implementation) GetByUserIDAndCurrency(ctx context.Context, userID string, currency string) (*models.Account, error) {
 	return s.repo.GetByUserIDAndCurrency(ctx, userID, currency)
+}
+
+func (s *implementation) GetByTypeAndCurrency(ctx context.Context, accountType string, currency string) (*models.Account, error) {
+	return s.repo.GetByTypeAndCurrency(ctx, accountType, currency)
 }
 
 func (s *implementation) GetAllByUserID(ctx context.Context, userID string) ([]models.Account, error) {

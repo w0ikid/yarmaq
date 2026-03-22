@@ -14,8 +14,24 @@ const (
 	TransactionStatusFailed     = "FAILED"
 )
 
+const (
+	TransactionTypeTransfer   = "TRANSFER"
+	TransactionTypeDeposit    = "DEPOSIT"
+	TransactionTypeWithdrawal = "WITHDRAWAL"
+)
+
+func IsValidTransactionType(transactionType string) bool {
+	switch transactionType {
+	case TransactionTypeTransfer, TransactionTypeDeposit, TransactionTypeWithdrawal:
+		return true
+	default:
+		return false
+	}
+}
+
 type Transaction struct {
 	ID              uuid.UUID  `json:"id"`
+	Type            string     `json:"type"` // TRANSFER, DEPOSIT, WITHDRAWAL
 	FromAccountID   uuid.UUID  `json:"from_account_id"`
 	ToAccountID     uuid.UUID  `json:"to_account_id"`
 	ToAccountNumber string     `json:"to_account_number,omitempty"`
@@ -29,6 +45,7 @@ type Transaction struct {
 
 type TransactionCreatedEvent struct {
 	ID            string `json:"id"`
+	Type          string `json:"type"` // TRANSFER, DEPOSIT, WITHDRAWAL
 	FromAccountID string `json:"from_account_id"`
 	ToAccountID   string `json:"to_account_id"`
 	Amount        int64  `json:"amount"`

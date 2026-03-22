@@ -45,6 +45,7 @@ func (uc *CreateTransactionUsecase) Execute(ctx context.Context, transaction mod
 
 	payload, err := json.Marshal(models.TransactionCreatedEvent{
 		ID:            created.ID.String(),
+		Type:          created.Type,
 		FromAccountID: created.FromAccountID.String(),
 		ToAccountID:   created.ToAccountID.String(),
 		Amount:        created.Amount,

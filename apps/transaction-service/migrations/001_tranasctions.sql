@@ -2,6 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS transactions (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    type            VARCHAR(20) NOT NULL DEFAULT 'TRANSFER',
     from_account_id UUID NOT NULL,
     to_account_id   UUID NOT NULL,
     amount          BIGINT NOT NULL,

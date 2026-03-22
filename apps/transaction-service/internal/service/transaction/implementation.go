@@ -35,12 +35,15 @@ func NewService(repo TransactionRepo, accountsClient *accounts.Client, logger *z
 func (s *implementation) Create(ctx context.Context, transaction models.Transaction) (*models.Transaction, error) {
 	s.logger.Infow("creating transaction", "to_account_number", transaction.ToAccountNumber, "amount", transaction.Amount, "currency", transaction.Currency)
 
-	if transaction.Amount <= 0 {
-		return nil, fmt.Errorf("%w: transaction amount must be positive", errs.ErrValidation)
+	if transaction.Type == "" {
+		transaction.Type = models.TransactionTypeTransfer
+	}
+	if !models.IsValidTransactionType(transaction.Type) {
+		return nil, fmt.Errorf("%w: unsupported transaction type: %s", errs.ErrValidation, transaction.Type)
 	}
 
-	if transaction.ToAccountNumber == "" {
-		return nil, fmt.Errorf("%w: to_account_number is required", errs.ErrValidation)
+	if transaction.Amount <= 0 {
+		return nil, fmt.Errorf("%w: transaction amount must be positive", errs.ErrValidation)
 	}
 
 	userID := ctxkeys.GetUserID(ctx)
@@ -48,27 +51,68 @@ func (s *implementation) Create(ctx context.Context, transaction models.Transact
 		return nil, fmt.Errorf("%w: user is not authenticated", errs.ErrUnauthorized)
 	}
 
-	fromAccount, err := s.accountsClient.GetAccountByUserIDAndCurrency(ctx, userID, transaction.Currency)
-	if err != nil {
-		return nil, fmt.Errorf("get from_account: %w", err)
-	}
-	s.logger.Infow("from_account fetched", "user_id", userID, "currency", transaction.Currency)
+	var fromAccount, toAccount *models.AccountResponse
+	var err error
 
-	if fromAccount == nil {
-		return nil, fmt.Errorf("%w: from_account not found for user %s and currency %s", errs.ErrNotFound, userID, transaction.Currency)
+	switch transaction.Type {
+	case models.TransactionTypeTransfer:
+		if transaction.ToAccountNumber == "" {
+			return nil, fmt.Errorf("%w: to_account_number is required", errs.ErrValidation)
+		}
+
+		fromAccount, err = s.accountsClient.GetAccountByUserIDAndCurrency(ctx, userID, transaction.Currency)
+		if err != nil {
+			return nil, fmt.Errorf("get from_account: %w", err)
+		}
+		if fromAccount == nil {
+			return nil, fmt.Errorf("%w: from_account not found for user %s and currency %s", errs.ErrNotFound, userID, transaction.Currency)
+		}
+
+		toAccount, err = s.accountsClient.GetAccountByNumberAndCurrency(ctx, transaction.ToAccountNumber, transaction.Currency)
+		if err != nil {
+			return nil, fmt.Errorf("get to_account: %w", err)
+		}
+		if toAccount == nil {
+			return nil, fmt.Errorf("%w: to_account not found for number %s and currency %s", errs.ErrNotFound, transaction.ToAccountNumber, transaction.Currency)
+		}
+		if toAccount.UserID == userID {
+			return nil, fmt.Errorf("%w: cannot transfer to your own account", errs.ErrValidation)
+		}
+	case models.TransactionTypeDeposit:
+		fromAccount, err = s.accountsClient.GetSystemAccountByCurrency(ctx, transaction.Currency)
+		if err != nil {
+			return nil, fmt.Errorf("get system from_account: %w", err)
+		}
+		if fromAccount == nil {
+			return nil, fmt.Errorf("%w: system account not found for currency %s", errs.ErrNotFound, transaction.Currency)
+		}
+
+		toAccount, err = s.accountsClient.GetAccountByUserIDAndCurrency(ctx, userID, transaction.Currency)
+		if err != nil {
+			return nil, fmt.Errorf("get user to_account: %w", err)
+		}
+		if toAccount == nil {
+			return nil, fmt.Errorf("%w: user account not found for user %s and currency %s", errs.ErrNotFound, userID, transaction.Currency)
+		}
+	case models.TransactionTypeWithdrawal:
+		fromAccount, err = s.accountsClient.GetAccountByUserIDAndCurrency(ctx, userID, transaction.Currency)
+		if err != nil {
+			return nil, fmt.Errorf("get user from_account: %w", err)
+		}
+		if fromAccount == nil {
+			return nil, fmt.Errorf("%w: user account not found for user %s and currency %s", errs.ErrNotFound, userID, transaction.Currency)
+		}
+
+		toAccount, err = s.accountsClient.GetSystemAccountByCurrency(ctx, transaction.Currency)
+		if err != nil {
+			return nil, fmt.Errorf("get system to_account: %w", err)
+		}
+		if toAccount == nil {
+			return nil, fmt.Errorf("%w: system account not found for currency %s", errs.ErrNotFound, transaction.Currency)
+		}
 	}
+
 	transaction.FromAccountID = fromAccount.ID
-
-	s.logger.Infow("fetching to_account", "number", transaction.ToAccountNumber, "currency", transaction.Currency)
-	toAccount, err := s.accountsClient.GetAccountByNumberAndCurrency(ctx, transaction.ToAccountNumber, transaction.Currency)
-	if err != nil {
-		return nil, fmt.Errorf("get to_account: %w", err)
-	}
-	s.logger.Infow("to_account fetched", "number", transaction.ToAccountNumber, "currency", transaction.Currency)
-
-	if toAccount == nil {
-		return nil, fmt.Errorf("%w: to_account not found for number %s and currency %s", errs.ErrNotFound, transaction.ToAccountNumber, transaction.Currency)
-	}
 	transaction.ToAccountID = toAccount.ID
 
 	if transaction.FromAccountID == transaction.ToAccountID {
