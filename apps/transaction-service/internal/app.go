@@ -172,12 +172,6 @@ func (a *App) Start(ctx context.Context) error {
 func (a *App) Stop(ctx context.Context) error {
 	a.cancel()
 
-	for _, c := range a.consumers {
-		if err := c.Close(); err != nil {
-			a.logger.Errorw("consumer close failed", zap.Error(err))
-		}
-	}
-
 	shutdownCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 

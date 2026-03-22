@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase/account"
 	"github.com/w0ikid/yarmaq/pkg/ctxkeys"
+	"github.com/w0ikid/yarmaq/pkg/errs"
 	"github.com/w0ikid/yarmaq/pkg/models"
 	"go.uber.org/zap"
 )
@@ -45,7 +46,7 @@ func (h *handler) CreateAccount(c *fiber.Ctx) error {
 	created, err := h.domain.CreateUsecase.Execute(c.Context(), acc)
 	if err != nil {
 		h.logger.Errorw("failed to create account", "error", err)
-		return c.Status(500).JSON(fiber.Map{"error": "Internal server error"})
+		return errs.HandleHTTP(c, err)
 	}
 
 	return c.Status(201).JSON(created)
@@ -60,10 +61,10 @@ func (h *handler) GetAccount(c *fiber.Ctx) error {
 
 	acc, err := h.domain.GetAccountUsecase.ExecuteByID(c.Context(), id)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Internal server error"})
+		return errs.HandleHTTP(c, err)
 	}
 	if acc == nil {
-		return c.Status(404).JSON(fiber.Map{"error": "Account not found"})
+		return errs.HandleHTTP(c, errs.ErrNotFound)
 	}
 
 	return c.Status(200).JSON(acc)

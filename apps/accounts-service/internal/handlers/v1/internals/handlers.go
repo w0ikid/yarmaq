@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase/account"
+	"github.com/w0ikid/yarmaq/pkg/errs"
 	"github.com/w0ikid/yarmaq/pkg/models"
 	"go.uber.org/zap"
 )
@@ -44,7 +45,7 @@ func (h *handler) UpdateBalance(c *fiber.Ctx) error {
 	err = h.domain.UpdateBalanceUsecase.Execute(c.Context(), id, req.Amount, req.OperationType, req.ReferenceID)
 	if err != nil {
 		h.logger.Errorw("failed to update balance", "id", id, "error", err)
-		return c.Status(500).JSON(fiber.Map{"error": "Internal server error"})
+		return errs.HandleHTTP(c, err)
 	}
 
 	return c.Status(200).Send(nil)

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-
+	pkgLogger "github.com/w0ikid/yarmaq/pkg/logger"
 	"github.com/w0ikid/yarmaq/pkg/config"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal"
 )
@@ -19,27 +19,10 @@ func main() {
 	cfg := config.Load("TRANSACTION")
 
 	// LOGGER
-	var logger *zap.Logger
-	var err error
-
-	if cfg.AppEnv == "prod" {
-		logger, err = zap.NewProduction()
-	} else {
-		logger, err = zap.NewDevelopment(
-			zap.WithCaller(false),
-			zap.AddStacktrace(zap.ErrorLevel + 1),
-		)
-	}
+	logger, err := pkgLogger.New(cfg.LogLevel)
 	if err != nil {
-		log.Fatalf("failed to init logger: %v", err)
+		log.Fatalf("failed to initialize logger: %v", err)
 	}
-	defer logger.Sync()
-	zap.ReplaceGlobals(logger)
-	
-	logger.Info("starting service",
-		zap.String("env", cfg.AppEnv),
-		zap.String("port", cfg.HTTP.Port),
-	)
 
 	// CONTEXT APP
 	ctx := context.Background()

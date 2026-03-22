@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/w0ikid/yarmaq/pkg/errs"
 	"github.com/w0ikid/yarmaq/pkg/models"
 	"go.uber.org/zap"
 )
@@ -35,7 +36,7 @@ func NewService(repo AccountRepo, ledgerRepo LedgerRepo, outboxRepo OutboxRepo, 
 
 func (s *implementation) Create(ctx context.Context, account models.Account) (*models.Account, error) {
     if !models.IsValidCurrency(account.Currency) {
-        return nil, fmt.Errorf("unsupported currency: %s", account.Currency)
+        return nil, fmt.Errorf("%w: unsupported currency: %s", errs.ErrValidation, account.Currency)
     }
 
     seq, err := s.repo.NextSeq(ctx)
@@ -74,12 +75,12 @@ func (s *implementation) UpdateBalance(ctx context.Context, accountID uuid.UUID,
         return err
     }
     if acc == nil {
-        return fmt.Errorf("account not found: %s", accountID)
+        return fmt.Errorf("%w: account not found: %s", errs.ErrNotFound, accountID)
     }
     
     acc.Balance += amount
     if acc.Balance < 0 {
-        return fmt.Errorf("insufficient funds: %s", accountID)
+        return fmt.Errorf("%w: insufficient funds: %s", errs.ErrValidation, accountID)
     }
     
     if _, err = s.repo.Update(ctx, *acc); err != nil {

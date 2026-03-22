@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	AppEnv   string
+	LogLevel string
 	HTTP     HTTPConfig
 	Postgres PostgresConfig
 	Zitadel  ZitadelConfig
@@ -68,7 +69,8 @@ func Load(prefix ...string) Config {
 	}
 
 	return Config{
-		AppEnv: getEnv("APP_ENV", "dev", servicePrefix),
+		AppEnv:   getEnv("APP_ENV", "dev", servicePrefix),
+		LogLevel: getEnv("LOG_LEVEL", "dev", servicePrefix),
 		HTTP: HTTPConfig{
 			Port: getEnv("APP_PORT", "8080", servicePrefix),
 		},
@@ -90,10 +92,10 @@ func Load(prefix ...string) Config {
 			Brokers: getEnvSlice("KAFKA_BROKERS", "localhost:9092", servicePrefix),
 			Topic:   getEnv("KAFKA_TOPIC", "events", servicePrefix),
 		},
-        Services: ServiceConfig{
-            AccountsServiceURL:    getEnv("ACCOUNTS_SERVICE_URL", "http://localhost:8081"),
-            TransactionServiceURL: getEnv("TRANSACTION_SERVICE_URL", "http://localhost:8082"),
-        },
+		Services: ServiceConfig{
+			AccountsServiceURL:    getEnv("ACCOUNTS_SERVICE_URL", "http://localhost:8081"),
+			TransactionServiceURL: getEnv("TRANSACTION_SERVICE_URL", "http://localhost:8082"),
+		},
 	}
 }
 
