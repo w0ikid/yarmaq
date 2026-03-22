@@ -32,6 +32,7 @@ func (r *Router) SetupRoutes(logger *zap.SugaredLogger) {
 	transactionRouter.Use(
 		middleware.AuthMiddleware(r.handler.JWKS),
 		middleware.UserContextMiddleware(),
+		middleware.RateLimiter(3, time.Second * 10),
 	)
 	transaction.NewRouter(transactionRouter, r.handler.Transaction, r.handler.JWKS).SetupRoutes()
 }
