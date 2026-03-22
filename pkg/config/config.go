@@ -83,7 +83,7 @@ func Load(prefix ...string) Config {
 		Zitadel: ZitadelConfig{
 			Domain:  getEnv("ZITADEL_DOMAIN_BACKEND", "http://zitadel.localhost:8080"),
 			API:     getEnv("ZITADEL_API_BACKEND", "zitadel.localhost:8080"),
-			KeyPath: getEnv("ZITADEL_KEY_PATH", "path/to/key.json"),
+			KeyPath: getEnv("ZITADEL_KEY_PATH", "path/to/key.json", servicePrefix),
 			JWKSURL: getEnv("ZITADEL_JWKS_URL", "http://zitadel.localhost:8080/oauth/v2/keys"),
 		},
 		Kafka: KafkaConfig{

@@ -6,6 +6,16 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+    OperationTypeHold        = "hold"
+    OperationTypeHoldRelease = "hold_release"
+    OperationTypeDeposit     = "deposit"
+    OperationTypeWithdraw    = "withdraw"
+    OperationTypeRefund      = "refund"
+    OperationTypeTransferIn  = "transfer_in"
+    OperationTypeTransferOut = "transfer_out"
+)
+
 type Ledger struct {
 	ID            uuid.UUID  `json:"id"`
 	AccountID     uuid.UUID  `json:"account_id"`

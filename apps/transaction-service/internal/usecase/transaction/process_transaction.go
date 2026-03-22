@@ -21,8 +21,9 @@ type ProcessTransactionSagaUsecase struct {
 		UpdateStatus(ctx context.Context, id uuid.UUID, status string) error
 	}
 	AccountService interface {
-		Debit(ctx context.Context, accountID string, transactionID uuid.UUID, amount int64) error
-		Credit(ctx context.Context, accountID string, transactionID uuid.UUID, amount int64) error
+		Hold(ctx context.Context, accountID string, transactionID uuid.UUID, amount int64) error
+		Deposit(ctx context.Context, accountID string, transactionID uuid.UUID, amount int64) error
+		Refund(ctx context.Context, accountID string, transactionID uuid.UUID, amount int64) error
 	}
 }
 
@@ -52,8 +53,8 @@ func (uc *ProcessTransactionSagaUsecase) Execute(ctx context.Context, event mode
 	if err != nil {
 		return err
 	}
-
-	err = uc.AccountService.Debit(ctx, event.FromAccountID, txID, event.Amount)
+	
+	err = uc.AccountService.Hold(ctx, event.FromAccountID, txID, event.Amount)
 	if err != nil {
 		errStr := err.Error()
 		uc.SagaService.UpdateStepStatus(ctx, holdStep.ID, models.SagaStatusFailed, &errStr)
@@ -78,7 +79,7 @@ func (uc *ProcessTransactionSagaUsecase) Execute(ctx context.Context, event mode
 
 	uc.TransactionService.UpdateStatus(ctx, txID, models.TransactionStatusDepositing)
 
-	err = uc.AccountService.Credit(ctx, event.ToAccountID, txID, event.Amount)
+	err = uc.AccountService.Deposit(ctx, event.ToAccountID, txID, event.Amount)
 	if err != nil {
 		errStr := err.Error()
 		if err := uc.SagaService.UpdateStepStatus(ctx, depositStep.ID, models.SagaStatusFailed, &errStr); err != nil {
@@ -112,7 +113,7 @@ func (uc *ProcessTransactionSagaUsecase) compensateHold(ctx context.Context, acc
 		return
 	}
 
-	err = uc.AccountService.Credit(ctx, accountID, txID, amount)
+	err = uc.AccountService.Refund(ctx, accountID, txID, amount)
 	if err != nil {
 		errStr := err.Error()
 		uc.Logger.Errorw("compensation failed", "error", err)

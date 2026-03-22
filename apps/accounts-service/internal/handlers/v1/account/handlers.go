@@ -17,7 +17,6 @@ type HandlerDeps struct {
 type Handler interface {
 	CreateAccount(c *fiber.Ctx) error
 	GetAccount(c *fiber.Ctx) error
-	UpdateBalance(c *fiber.Ctx) error
 }
 
 type handler struct {
@@ -70,23 +69,3 @@ func (h *handler) GetAccount(c *fiber.Ctx) error {
 	return c.Status(200).JSON(acc)
 }
 
-func (h *handler) UpdateBalance(c *fiber.Ctx) error {
-	idStr := c.Params("id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid account ID"})
-	}
-
-	var req models.UpdateBalanceRequest
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
-	}
-
-	err = h.domain.UpdateBalanceUsecase.Execute(c.Context(), id, req.Amount, req.OperationType, req.ReferenceID)
-	if err != nil {
-		h.logger.Errorw("failed to update balance", "id", id, "error", err)
-		return c.Status(500).JSON(fiber.Map{"error": "Internal server error"})
-	}
-
-	return c.Status(200).Send(nil)
-}

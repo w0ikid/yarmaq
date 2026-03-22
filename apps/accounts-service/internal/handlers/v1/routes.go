@@ -4,8 +4,9 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/middleware"
+	"github.com/w0ikid/yarmaq/pkg/middleware"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/account"
+	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/internals"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/ledger"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/webhook"
 	"go.uber.org/zap"
@@ -36,6 +37,13 @@ func (r *Router) SetupRoutes(logger *zap.SugaredLogger) {
 		middleware.UserContextMiddleware(),
 	)
 	account.NewRouter(accountsRouter, r.handler.Account).SetupRoutes()
+
+	internalRouter := r.router.Group("/internal")
+	internalRouter.Use(
+		middleware.AuthMiddleware(r.handler.JWKS),
+		middleware.ServiceOnlyMiddleware("accounts-service", logger, "transaction-service"),
+	)
+	internals.NewRouter(internalRouter, r.handler.Internal).SetupRoutes()
 
 	ledgerRouter := r.router.Group("/ledger")
 	ledgerRouter.Use(middleware.AuthMiddleware(r.handler.JWKS))

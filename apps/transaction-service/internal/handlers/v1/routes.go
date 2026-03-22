@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/middleware"
+	"github.com/w0ikid/yarmaq/pkg/middleware"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1/transaction"
 	"go.uber.org/zap"
 )

@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-
+	"log"
 	"time"
+	"bytes"
 
 	"github.com/w0ikid/yarmaq/pkg/zitadel"
 )
@@ -35,5 +36,23 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*http.Response, err
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json")
 
-	return c.http.Do(req)
+	// ---- Логирование ----
+	log.Printf("[httpclient] outgoing request: %s %s token=%s...", req.Method, req.URL, token[:8]) // первые 8 символов токена
+	// ---------------------
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	// ---- Логирование ответа ----
+	if resp.StatusCode != http.StatusOK {
+		var respBody bytes.Buffer
+		_, _ = respBody.ReadFrom(resp.Body)
+		log.Printf("[httpclient] response code=%d body=%s", resp.StatusCode, respBody.String())
+		// возвращаем ошибку дальше
+		return resp, fmt.Errorf("accounts-service returned %d", resp.StatusCode)
+	}
+
+	return resp, nil
 }
