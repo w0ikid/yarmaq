@@ -16,6 +16,8 @@ type HandlerDeps struct {
 
 type Handler interface {
 	UpdateBalance(c *fiber.Ctx) error
+	GetAccountByNumberAndCurrency(c *fiber.Ctx) error
+	GetAccountByUserIDAndCurrency(c *fiber.Ctx) error
 }
 
 type handler struct {
@@ -49,4 +51,42 @@ func (h *handler) UpdateBalance(c *fiber.Ctx) error {
 	}
 
 	return c.Status(200).Send(nil)
+}
+
+func (h *handler) GetAccountByNumberAndCurrency(c *fiber.Ctx) error {
+	number := c.Query("number")
+	currency := c.Query("currency")
+	if number == "" || currency == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "number and currency are required"})
+	}
+
+	acc, err := h.domain.GetAccountUsecase.ExecuteByNumberAndCurrency(c.Context(), number, currency)
+	if err != nil {
+		h.logger.Errorw("failed to get account by number and currency", "number", number, "currency", currency, "error", err)
+		return errs.HandleHTTP(c, err)
+	}
+	if acc == nil {
+		return errs.HandleHTTP(c, errs.ErrNotFound)
+	}
+
+	return c.Status(200).JSON(acc)
+}
+
+func (h *handler) GetAccountByUserIDAndCurrency(c *fiber.Ctx) error {
+	userID := c.Query("user_id")
+	currency := c.Query("currency")
+	if userID == "" || currency == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "user_id and currency are required"})
+	}
+
+	acc, err := h.domain.GetAccountUsecase.ExecuteByUserIDAndCurrency(c.Context(), userID, currency)
+	if err != nil {
+		h.logger.Errorw("failed to get account by user id and currency", "user_id", userID, "currency", currency, "error", err)
+		return errs.HandleHTTP(c, err)
+	}
+	if acc == nil {
+		return errs.HandleHTTP(c, errs.ErrNotFound)
+	}
+
+	return c.Status(200).JSON(acc)
 }

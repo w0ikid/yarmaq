@@ -19,59 +19,63 @@ type Service interface {
 }
 
 type implementation struct {
-	repo    TransactionRepo
+	repo           TransactionRepo
 	accountsClient *accounts.Client
-	logger  *zap.SugaredLogger
+	logger         *zap.SugaredLogger
 }
 
 func NewService(repo TransactionRepo, accountsClient *accounts.Client, logger *zap.SugaredLogger) Service {
 	return &implementation{
-		repo:   repo,
+		repo:           repo,
 		accountsClient: accountsClient,
-		logger: logger.Named("transaction_service"),
+		logger:         logger.Named("transaction_service"),
 	}
 }
 
 func (s *implementation) Create(ctx context.Context, transaction models.Transaction) (*models.Transaction, error) {
-	s.logger.Infow("creating transaction", "from", transaction.FromAccountID, "to", transaction.ToAccountID, "amount", transaction.Amount)
+	s.logger.Infow("creating transaction", "to_account_number", transaction.ToAccountNumber, "amount", transaction.Amount, "currency", transaction.Currency)
 
 	if transaction.Amount <= 0 {
 		return nil, fmt.Errorf("%w: transaction amount must be positive", errs.ErrValidation)
 	}
 
+	if transaction.ToAccountNumber == "" {
+		return nil, fmt.Errorf("%w: to_account_number is required", errs.ErrValidation)
+	}
+
+	userID := ctxkeys.GetUserID(ctx)
+	if userID == "" {
+		return nil, fmt.Errorf("%w: user is not authenticated", errs.ErrUnauthorized)
+	}
+
+	fromAccount, err := s.accountsClient.GetAccountByUserIDAndCurrency(ctx, userID, transaction.Currency)
+	if err != nil {
+		return nil, fmt.Errorf("get from_account: %w", err)
+	}
+	s.logger.Infow("from_account fetched", "user_id", userID, "currency", transaction.Currency)
+
+	if fromAccount == nil {
+		return nil, fmt.Errorf("%w: from_account not found for user %s and currency %s", errs.ErrNotFound, userID, transaction.Currency)
+	}
+	transaction.FromAccountID = fromAccount.ID
+
+	s.logger.Infow("fetching to_account", "number", transaction.ToAccountNumber, "currency", transaction.Currency)
+	toAccount, err := s.accountsClient.GetAccountByNumberAndCurrency(ctx, transaction.ToAccountNumber, transaction.Currency)
+	if err != nil {
+		return nil, fmt.Errorf("get to_account: %w", err)
+	}
+	s.logger.Infow("to_account fetched", "number", transaction.ToAccountNumber, "currency", transaction.Currency)
+
+	if toAccount == nil {
+		return nil, fmt.Errorf("%w: to_account not found for number %s and currency %s", errs.ErrNotFound, transaction.ToAccountNumber, transaction.Currency)
+	}
+	transaction.ToAccountID = toAccount.ID
+
 	if transaction.FromAccountID == transaction.ToAccountID {
 		return nil, fmt.Errorf("%w: from and to accounts cannot be the same", errs.ErrValidation)
 	}
 
-	userID := ctxkeys.GetUserID(ctx)
-	fromAccount, err := s.accountsClient.GetAccount(ctx, transaction.FromAccountID.String())
-	if err != nil {
-		return nil, fmt.Errorf("get from_account: %w", err)
-	}
-	s.logger.Infow("from_account fetched", "id", transaction.FromAccountID)
-
-	if fromAccount == nil {
-		return nil, fmt.Errorf("%w: from_account not found: %s", errs.ErrNotFound, transaction.FromAccountID)
-	}
-
-	// Validate ownership
-	s.logger.Infow("checking ownership", "userID", userID, "account.UserID", fromAccount.UserID)
-	if fromAccount.UserID != userID {
-		return nil, fmt.Errorf("%w: account %s does not belong to user %s", errs.ErrUnauthorized, transaction.FromAccountID, userID)
-	}
-
-	s.logger.Infow("fetching to_account", "id", transaction.ToAccountID)
-	toAccount, err := s.accountsClient.GetAccount(ctx, transaction.ToAccountID.String())
-	if err != nil {
-		return nil, fmt.Errorf("get to_account: %w", err)
-	}
-	s.logger.Infow("to_account fetched", "id", transaction.ToAccountID)
-
-	if toAccount == nil {
-		return nil, fmt.Errorf("%w: to_account not found: %s", errs.ErrNotFound, transaction.ToAccountID)
-	}
-
-	if fromAccount.Currency != toAccount.Currency {
+	if fromAccount.Currency != transaction.Currency || toAccount.Currency != transaction.Currency {
 		return nil, fmt.Errorf("%w: accounts have different currencies: %s vs %s", errs.ErrValidation, fromAccount.Currency, toAccount.Currency)
 	}
 

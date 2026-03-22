@@ -18,4 +18,6 @@ func NewRouter(router fiber.Router, handler Handler) *Router {
 
 func (r *Router) SetupRoutes() {
 	r.router.Post("/accounts/:id/balance", r.handler.UpdateBalance)
+	r.router.Get("/accounts/by-number", r.handler.GetAccountByNumberAndCurrency)
+	r.router.Get("/accounts/by-user-currency", r.handler.GetAccountByUserIDAndCurrency)
 }

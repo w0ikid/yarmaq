@@ -38,11 +38,10 @@ func (h *handler) CreateTransaction(c *fiber.Ctx) error {
 	}
 
 	tx := models.Transaction{
-		FromAccountID:  req.FromAccountID,
-		ToAccountID:    req.ToAccountID,
-		Amount:         req.Amount,
-		Currency:       req.Currency,
-		IdempotencyKey: req.IdempotencyKey,
+		ToAccountNumber: req.ToAccountNumber,
+		Amount:          req.Amount,
+		Currency:        req.Currency,
+		IdempotencyKey:  req.IdempotencyKey,
 	}
 
 	created, err := h.domain.CreateUsecase.Execute(c.UserContext(), tx)

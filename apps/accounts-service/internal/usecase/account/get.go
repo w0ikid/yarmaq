@@ -15,7 +15,10 @@ type GetAccountUsecase struct {
 	AccountService interface {
 		GetByID(ctx context.Context, id uuid.UUID) (*models.Account, error)
 		GetByNumber(ctx context.Context, number string) (*models.Account, error)
+		GetByNumberAndCurrency(ctx context.Context, number string, currency string) (*models.Account, error)
 		GetByUserID(ctx context.Context, userID uuid.UUID) (*models.Account, error)
+		GetByUserIDAndCurrency(ctx context.Context, userID string, currency string) (*models.Account, error)
+		GetAllByUserID(ctx context.Context, userID string) ([]models.Account, error)
 	}
 }
 
@@ -34,6 +37,18 @@ func (uc *GetAccountUsecase) ExecuteByNumber(ctx context.Context, number string)
 	return uc.AccountService.GetByNumber(ctx, number)
 }
 
+func (uc *GetAccountUsecase) ExecuteByNumberAndCurrency(ctx context.Context, number string, currency string) (*models.Account, error) {
+	return uc.AccountService.GetByNumberAndCurrency(ctx, number, currency)
+}
+
 func (uc *GetAccountUsecase) ExecuteByUserID(ctx context.Context, userID uuid.UUID) (*models.Account, error) {
 	return uc.AccountService.GetByUserID(ctx, userID)
+}
+
+func (uc *GetAccountUsecase) ExecuteByUserIDAndCurrency(ctx context.Context, userID string, currency string) (*models.Account, error) {
+	return uc.AccountService.GetByUserIDAndCurrency(ctx, userID, currency)
+}
+
+func (uc *GetAccountUsecase) ExecuteAllByUserID(ctx context.Context, userID string) ([]models.Account, error) {
+	return uc.AccountService.GetAllByUserID(ctx, userID)
 }

@@ -1,15 +1,12 @@
 package transaction
 
-import (
-	"github.com/google/uuid"
-)
+import "github.com/google/uuid"
 
 type CreateTransactionRequest struct {
-	FromAccountID  uuid.UUID `json:"from_account_id"`
-	ToAccountID    uuid.UUID `json:"to_account_id"`
-	Amount         int64     `json:"amount"`
-	Currency       string    `json:"currency"`
-	IdempotencyKey string    `json:"idempotency_key"`
+	ToAccountNumber string `json:"to_account_number"`
+	Amount          int64  `json:"amount"`
+	Currency        string `json:"currency"`
+	IdempotencyKey  string `json:"idempotency_key"`
 }
 
 type TransactionResponse struct {

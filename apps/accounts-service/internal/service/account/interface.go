@@ -11,7 +11,10 @@ type AccountRepo interface {
 	Create(ctx context.Context, account models.Account) (*models.Account, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Account, error)
 	GetByNumber(ctx context.Context, number string) (*models.Account, error)
+	GetByNumberAndCurrency(ctx context.Context, number string, currency string) (*models.Account, error)
 	GetByUserID(ctx context.Context, userID uuid.UUID) (*models.Account, error)
+	GetByUserIDAndCurrency(ctx context.Context, userID string, currency string) (*models.Account, error)
+	GetAllByUserID(ctx context.Context, userID string) ([]models.Account, error)
 	Update(ctx context.Context, account models.Account) (*models.Account, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 
