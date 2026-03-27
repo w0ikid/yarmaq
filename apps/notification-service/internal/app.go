@@ -16,15 +16,14 @@ import (
 	"github.com/w0ikid/yarmaq/apps/notification-service/internal/repo"
 	"github.com/w0ikid/yarmaq/apps/notification-service/internal/repo/igorm"
 
+	"github.com/w0ikid/yarmaq/apps/notification-service/internal/consumers"
 	"github.com/w0ikid/yarmaq/apps/notification-service/internal/container"
-	"github.com/w0ikid/yarmaq/apps/notification-service/internal/handlers"
-	"github.com/w0ikid/yarmaq/apps/notification-service/internal/handlers/v1/transaction"
+	"github.com/w0ikid/yarmaq/apps/notification-service/internal/handlers" 
 	"github.com/w0ikid/yarmaq/pkg/httpclient"
 	"github.com/w0ikid/yarmaq/pkg/httpclient/accounts"
-
-	"github.com/w0ikid/yarmaq/apps/notification-service/internal/consumers"
 	kafkamodule "github.com/w0ikid/yarmaq/pkg/kafka_module"
 	"github.com/w0ikid/yarmaq/pkg/outbox_worker"
+	"github.com/w0ikid/yarmaq/pkg/smtpclient"
 )
 
 type App struct {
@@ -69,6 +68,17 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 	appLogger.Info("zitadel domain: ", cfg.Zitadel.Domain)
 	appLogger.Info("zitadel keyPath: ", cfg.Zitadel.KeyPath)
 
+	// SMTP client
+	smtpClient := smtpclient.New(smtpclient.Config{
+		Host:     cfg.SMTP.Host,
+		Port:     cfg.SMTP.Port,
+		Username: cfg.SMTP.Username,
+		Password: cfg.SMTP.Password,
+		From:     cfg.SMTP.From,
+		UseTLS:   cfg.SMTP.UseTLS,
+	})
+	appLogger.Info("smtp client initialized", smtpClient)
+
 	// kafka publisher
 	kafkaPublisher, err := kafkamodule.NewPublisher(kafkamodule.Config{
 		Brokers: cfg.Kafka.Brokers,
@@ -99,16 +109,21 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 		repositories,
 		zitadelClient,
 		accountsClient,
+		smtpClient,
 		appLogger,
 	)
 
 	// kafka consumers
+	resolver := consumers.NewResolver(accountsClient, zitadelClient)
 	transactionCreatedHandler := consumers.NewTransactionCreatedHandler(
-		&cont.TransactionDomain.ProcessSagaUsecase,
+		&cont.NotificationDomain.DispatchUsecase,
+		resolver,
+		resolver,
 		appLogger,
 	)
 	accountCreatedHandler := consumers.NewAccountCreatedHandler(
-		&cont.TransactionDomain.CreateUsecase,
+		&cont.NotificationDomain.DispatchUsecase,
+		resolver,
 		appLogger,
 	)
 
@@ -123,7 +138,7 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 		kafkamodule.New(
 			cfg.Kafka.Brokers,
 			"account.created",
-			"transaction-service",
+			"account-service",
 			accountCreatedHandler,
 			appLogger,
 		),
@@ -131,10 +146,6 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 
 	// Handlers
 	h := handlers.NewHandlers(handlers.Depedencies{
-		TransactionDeps: transaction.HandlerDeps{
-			TransactionDomain: cont.TransactionDomain,
-			Logger:            appLogger,
-		},
 		JWKS: jwksClient,
 	})
 

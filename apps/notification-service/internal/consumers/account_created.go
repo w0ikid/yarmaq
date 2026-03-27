@@ -5,25 +5,27 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
-	"github.com/w0ikid/yarmaq/pkg/ctxkeys"
 	"github.com/w0ikid/yarmaq/pkg/models"
 	"go.uber.org/zap"
 )
 
 type AccountCreatedHandler struct {
-	createTransactionUsecase interface {
-		Execute(ctx context.Context, transaction models.Transaction) (*models.Transaction, error)
+	dispatchNotificationUsecase interface {
+		Execute(ctx context.Context, notification models.Notification) (*models.Notification, error)
 	}
-	logger *zap.SugaredLogger
+	emailResolver UserEmailResolver
+	logger        *zap.SugaredLogger
 }
 
-func NewAccountCreatedHandler(createTransactionUsecase interface {
-	Execute(ctx context.Context, transaction models.Transaction) (*models.Transaction, error)
-}, logger *zap.SugaredLogger) *AccountCreatedHandler {
+func NewAccountCreatedHandler(dispatchNotificationUsecase interface {
+	Execute(ctx context.Context, notification models.Notification) (*models.Notification, error)
+}, emailResolver UserEmailResolver, logger *zap.SugaredLogger) *AccountCreatedHandler {
 	return &AccountCreatedHandler{
-		createTransactionUsecase: createTransactionUsecase,
-		logger:                   logger,
+		dispatchNotificationUsecase: dispatchNotificationUsecase,
+		emailResolver:               emailResolver,
+		logger:                      logger,
 	}
 }
 
@@ -34,20 +36,32 @@ func (h *AccountCreatedHandler) Handle(ctx context.Context, msg kafka.Message) e
 		return err
 	}
 
-	h.logger.Infow("account.created received", "id", event.ID, "user_id", event.UserID)
+	h.logger.Infow("account.created received", "account_id", event.ID, "user_id", event.UserID)
 
-	txCtx := ctxkeys.WithUserContext(ctx, event.UserID, nil)
-	created, err := h.createTransactionUsecase.Execute(txCtx, models.Transaction{
-		Type:           models.TransactionTypeDeposit,
-		Amount:         1000,
-		Currency:       "KZT",
-		IdempotencyKey: fmt.Sprintf("account-created:%s:kzt-bonus", event.ID),
-	})
+	userID, err := uuid.Parse(event.UserID)
 	if err != nil {
-		h.logger.Errorw("failed to create welcome deposit transaction", "account_id", event.ID, "user_id", event.UserID, "error", err)
+		return fmt.Errorf("parse account.created user_id: %w", err)
+	}
+
+	email, err := h.emailResolver.ResolveEmail(ctx, event.UserID)
+	if err != nil {
+		h.logger.Errorw("failed to resolve recipient email", "user_id", event.UserID, "error", err)
 		return err
 	}
 
-	h.logger.Infow("welcome deposit transaction created", "transaction_id", created.ID, "user_id", event.UserID, "amount", created.Amount, "currency", created.Currency)
+	notification, err := h.dispatchNotificationUsecase.Execute(ctx, models.Notification{
+		UserID:   userID,
+		Type:     models.TypeAccountCreated,
+		Channel:  models.ChannelEmail,
+		Subject:  "Account created",
+		Body:     fmt.Sprintf("<p>Your account %s was created successfully.</p>", event.ID),
+		Metadata: map[string]any{"email": email, "account_id": event.ID},
+	})
+	if err != nil {
+		h.logger.Errorw("failed to dispatch account created notification", "account_id", event.ID, "user_id", event.UserID, "error", err)
+		return err
+	}
+
+	h.logger.Infow("account created notification sent", "notification_id", notification.ID, "user_id", event.UserID, "status", notification.Status)
 	return nil
 }

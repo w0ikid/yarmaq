@@ -51,10 +51,12 @@ type ServiceConfig struct {
 }
 
 type SMTPConfig struct {
-	Host   string
-	Port   int
-	From   string
-	UseTLS bool
+	Host     string
+	Port     int
+	Username string
+	Password string
+	From     string
+	UseTLS   bool
 }
 
 func (p PostgresConfig) DSN() string {
@@ -106,10 +108,12 @@ func Load(prefix ...string) Config {
 			TransactionServiceURL: getEnv("TRANSACTION_SERVICE_URL", "http://localhost:8082"),
 		},
 		SMTP: SMTPConfig{
-			Host:   getEnv("SMTP_HOST", "localhost", servicePrefix),
-			Port:   getEnvInt("SMTP_PORT", "1025", servicePrefix),
-			From:   getEnv("SMTP_FROM", "noreply@yarmaq.local", servicePrefix),
-			UseTLS: getEnvBool("SMTP_USE_TLS", "false", servicePrefix),
+			Host:     getEnv("SMTP_HOST", "localhost", servicePrefix),
+			Port:     getEnvInt("SMTP_PORT", "1025", servicePrefix),
+			Username: getEnv("SMTP_USERNAME", "", servicePrefix),
+			Password: getEnv("SMTP_PASSWORD", "", servicePrefix),
+			From:     getEnv("SMTP_FROM", "noreply@yarmaq.local", servicePrefix),
+			UseTLS:   getEnvBool("SMTP_USE_TLS", "false", servicePrefix),
 		},
 	}
 }
