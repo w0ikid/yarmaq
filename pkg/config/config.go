@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -16,6 +17,7 @@ type Config struct {
 	Zitadel  ZitadelConfig
 	Kafka    KafkaConfig
 	Services ServiceConfig
+	SMTP     SMTPConfig
 }
 
 type HTTPConfig struct {
@@ -46,6 +48,13 @@ type KafkaConfig struct {
 type ServiceConfig struct {
 	AccountsServiceURL    string
 	TransactionServiceURL string
+}
+
+type SMTPConfig struct {
+	Host   string
+	Port   int
+	From   string
+	UseTLS bool
 }
 
 func (p PostgresConfig) DSN() string {
@@ -96,6 +105,12 @@ func Load(prefix ...string) Config {
 			AccountsServiceURL:    getEnv("ACCOUNTS_SERVICE_URL", "http://localhost:8081"),
 			TransactionServiceURL: getEnv("TRANSACTION_SERVICE_URL", "http://localhost:8082"),
 		},
+		SMTP: SMTPConfig{
+			Host:   getEnv("SMTP_HOST", "localhost", servicePrefix),
+			Port:   getEnvInt("SMTP_PORT", "1025", servicePrefix),
+			From:   getEnv("SMTP_FROM", "noreply@yarmaq.local", servicePrefix),
+			UseTLS: getEnvBool("SMTP_USE_TLS", "false", servicePrefix),
+		},
 	}
 }
 
@@ -120,4 +135,18 @@ func getEnv(key, fallback string, prefix ...string) string {
 func getEnvSlice(key, fallback string, prefix ...string) []string {
 	value := getEnv(key, fallback, prefix...)
 	return strings.Split(value, ",")
+}
+
+func getEnvInt(key, fallback string, prefix ...string) int {
+	value := getEnv(key, fallback, prefix...)
+	n, err := strconv.Atoi(value)
+	if err != nil {
+		return 0
+	}
+	return n
+}
+
+func getEnvBool(key, fallback string, prefix ...string) bool {
+	value := getEnv(key, fallback, prefix...)
+	return value == "true" || value == "1"
 }
