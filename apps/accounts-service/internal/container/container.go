@@ -44,7 +44,7 @@ func NewContainer(
 
 		Services: services,
 
-		AccountDomain: account.NewDomain(baseusecase, services.AccountService, services.OutboxService),
+		AccountDomain: account.NewDomain(baseusecase, services.AccountService, services.OutboxService, services.UserService),
 		LedgerDomain:  ledger.NewDomain(baseusecase, services.LedgerService),
 		OutboxDomain:  outbox.NewDomain(baseusecase, services.OutboxService),
 	}

@@ -46,6 +46,8 @@ type AccountResponse struct {
 
 // EVENTS
 type AccountCreatedEvent struct {
-	ID     string `json:"id"`
-	UserID string `json:"user_id"`
+	ID       string `json:"id"`
+	UserID   string `json:"user_id"`
+	Currency string `json:"currency"`
+	Email    string `json:"email,omitempty"`
 }

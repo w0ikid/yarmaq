@@ -19,13 +19,20 @@ type CreateAccountUsecase struct {
 	OutboxService interface {
 		Create(ctx context.Context, event models.Outbox) (*models.Outbox, error)
 	}
+
+	UsersService interface {
+		GetEmailByID(ctx context.Context, id string) (string, error)
+	}
 }
 
-func NewCreateAccountUsecase(base usecase.BaseUsecase, accountService account.Service, outboxService outbox.Service) CreateAccountUsecase {
+func NewCreateAccountUsecase(base usecase.BaseUsecase, accountService account.Service, outboxService outbox.Service, usersService interface {
+	GetEmailByID(ctx context.Context, id string) (string, error)
+}) CreateAccountUsecase {
 	return CreateAccountUsecase{
 		BaseUsecase:    base,
 		AccountService: accountService,
 		OutboxService:  outboxService,
+		UsersService:   usersService,
 	}
 }
 
@@ -49,10 +56,25 @@ func (uc *CreateAccountUsecase) Execute(ctx context.Context, account models.Acco
 		userID = *createdAccount.UserID
 	}
 
+	var email string
+	if userID != "" && uc.UsersService != nil {
+		email, err = uc.UsersService.GetEmailByID(txCtx, userID)
+		if err != nil {
+			uc.Logger.Errorw("failed to get user email", "user_id", userID, "error", err)
+			return nil, err
+		}
+	}
+
 	payload, err := json.Marshal(models.AccountCreatedEvent{
-		ID:     createdAccount.ID.String(),
-		UserID: userID,
+		ID:       createdAccount.ID.String(),
+		UserID:   userID,
+		Currency: createdAccount.Currency,
+		Email:    email,
 	})
+	if err != nil {
+		uc.Logger.Errorw("failed to marshal account created event", "account_id", createdAccount.ID, "error", err)
+		return nil, err
+	}
 
 	// outbox event
 	_, err = uc.OutboxService.Create(txCtx, models.Outbox{
