@@ -1,0 +1,90 @@
+services:
+  accounts-service:
+    build:
+      context: ..
+      dockerfile: apps/accounts-service/Dockerfile
+    container_name: yarmaq-accounts-service
+    restart: unless-stopped
+    volumes:
+      - ../secrets:/app/secrets:ro
+    env_file:
+      - ../.env
+    environment:
+      - POSTGRES_HOST=infra-postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_SERVICE_DB=yarmaq_accounts
+      - KAFKA_BROKERS=kafka:29092
+      - ZITADEL_JWKS_URL=http://${ZITADEL_DOMAIN}/oauth/v2/keys
+      - ZITADEL_DOMAIN_BACKEND=http://${ZITADEL_DOMAIN}
+      - ZITADEL_API_BACKEND=${ZITADEL_DOMAIN}:80
+    networks:
+      - zitadel
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.accounts.rule=Host(`${ZITADEL_DOMAIN}`) && PathPrefix(`/api/v1/accounts`)"
+      - "traefik.http.services.accounts.loadbalancer.server.port=8081"
+      - "traefik.http.routers.accounts.priority=300"
+      - traefik.docker.network=zitadel
+
+  transaction-service:
+    build:
+      context: ..
+      dockerfile: apps/transaction-service/Dockerfile
+    container_name: yarmaq-transaction-service
+    restart: unless-stopped
+    volumes:
+      - ../secrets:/app/secrets:ro
+    env_file:
+      - ../.env
+    environment:
+      - POSTGRES_HOST=infra-postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_SERVICE_DB=yarmaq_transactions
+      - KAFKA_BROKERS=kafka:29092
+      - ZITADEL_JWKS_URL=http://${ZITADEL_DOMAIN}/oauth/v2/keys
+      - ZITADEL_DOMAIN_BACKEND=http://${ZITADEL_DOMAIN}
+      - ZITADEL_API_BACKEND=${ZITADEL_DOMAIN}:80
+    networks:
+      - zitadel
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.transactions.rule=Host(`${ZITADEL_DOMAIN}`) && PathPrefix(`/api/v1/transactions`)"
+      - "traefik.http.services.transactions.loadbalancer.server.port=8082"
+      - "traefik.http.routers.transactions.priority=300"
+
+  notification-service:
+    build:
+      context: ..
+      dockerfile: apps/notification-service/Dockerfile
+    container_name: yarmaq-notification-service
+    restart: unless-stopped
+    volumes:
+      - ../secrets:/app/secrets:ro
+    env_file:
+      - ../.env
+    environment:
+      - POSTGRES_HOST=infra-postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_SERVICE_DB=yarmaq_notifications
+      - KAFKA_BROKERS=kafka:29092
+      - ZITADEL_JWKS_URL=http://${ZITADEL_DOMAIN}/oauth/v2/keys
+      - ZITADEL_DOMAIN_BACKEND=http://${ZITADEL_DOMAIN}
+      - ZITADEL_API_BACKEND=${ZITADEL_DOMAIN}:80
+    networks:
+      - zitadel
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.notifications.rule=Host(`${ZITADEL_DOMAIN}`) && PathPrefix(`/api/v1/notifications`)"
+      - "traefik.http.services.notifications.loadbalancer.server.port=8083"
+      - "traefik.http.routers.notifications.priority=300"
+      - traefik.docker.network=zitadel
+
+networks:
+  zitadel:
+    external: true
+
+volumes:
+  postgres_data:

@@ -1,6 +1,7 @@
-# Подгружаем переменные из .env, если он существует
-ifneq (,$(wildcard ./.env))
-    include .env
+# Файл переменных окружения (по умолчанию .env)
+ENV_FILE         ?= .env
+ifneq (,$(wildcard $(ENV_FILE)))
+    include $(ENV_FILE)
     export
 endif
 
@@ -11,6 +12,7 @@ GOOSE_DRIVER     ?= postgres
 DOCKER_DIR       := ./deployment
 DB_COMPOSE       := $(DOCKER_DIR)/docker-compose.infra.yml
 ZITADEL_COMPOSE  := $(DOCKER_DIR)/docker-compose.zitadel.yml
+APPS_COMPOSE     := $(DOCKER_DIR)/docker-compose.yml
 
 # Проекты (для разделения в docker ps)
 INFRA_PROJECT    := yarmaq-infra
@@ -22,15 +24,21 @@ YELLOW := \033[0;33m
 NC     := \033[0m
 
 .PHONY: help infra-up infra-down zitadel-up zitadel-down \
-        migrate-accounts migrate-transactions migrate-all \
+        apps-up apps-down apps-logs \
+        migrate-accounts migrate-transactions migrate-notifications migrate-all \
         up down down-v
+
+# Вспомогательная функция для docker compose с env-файлом
+DOCKER_COMPOSE := docker compose --env-file $(ENV_FILE)
 
 help:
 	@echo "$(YELLOW)Yarmaq Makefile commands:$(NC)"
 	@echo "  make infra-up          - Запустить Postgres, Kafka и т.д."
 	@echo "  make zitadel-up        - Запустить Zitadel"
+	@echo "  make apps-up           - Собрать и запустить микросервисы (Docker)"
+	@echo "  make apps-logs         - Просмотр логов микросервисов"
 	@echo "  make migrate-all       - Накатить миграции для всех сервисов"
-	@echo "  make up                - Поднять всё и накатить миграции"
+	@echo "  make up                - Поднять всё (infra + zitadel + migrations + apps)"
 	@echo "  make down              - Остановить всё (сохранить данные)"
 	@echo "  make down-v            - Остановить всё и УДАЛИТЬ данные (volumes)"
 
@@ -38,19 +46,19 @@ help:
 # ИНФРАСТРУКТУРА
 # ───────────────────────────────────────────
 infra-up:
-	docker compose -p $(INFRA_PROJECT) -f $(DB_COMPOSE) up -d
+	$(DOCKER_COMPOSE) -p $(INFRA_PROJECT) -f $(DB_COMPOSE) up -d
 
 infra-down:
-	docker compose -p $(INFRA_PROJECT) -f $(DB_COMPOSE) down
+	$(DOCKER_COMPOSE) -p $(INFRA_PROJECT) -f $(DB_COMPOSE) down
 
 infra-down-v:
-	docker compose -p $(INFRA_PROJECT) -f $(DB_COMPOSE) down -v
+	$(DOCKER_COMPOSE) -p $(INFRA_PROJECT) -f $(DB_COMPOSE) down -v
 
 zitadel-up:
-	docker compose -p $(ZITADEL_PROJECT) -f $(ZITADEL_COMPOSE) up -d --wait
+	$(DOCKER_COMPOSE) -p $(ZITADEL_PROJECT) -f $(ZITADEL_COMPOSE) up -d --wait
 
 zitadel-down:
-	docker compose -p $(ZITADEL_PROJECT) -f $(ZITADEL_COMPOSE) down
+	$(DOCKER_COMPOSE) -p $(ZITADEL_PROJECT) -f $(ZITADEL_COMPOSE) down
 
 # ───────────────────────────────────────────
 # МИГРАЦИИ (Goose)
@@ -80,21 +88,36 @@ migrate-notifications:
 migrate-all: migrate-accounts migrate-transactions migrate-notifications
 
 # ───────────────────────────────────────────
+# ПРИЛОЖЕНИЯ (Microservices)
+# ───────────────────────────────────────────
+apps-up:
+	$(DOCKER_COMPOSE) -p $(APP_PROJECT) -f $(APPS_COMPOSE) up -d --build
+
+apps-down:
+	$(DOCKER_COMPOSE) -p $(APP_PROJECT) -f $(APPS_COMPOSE) down -v
+
+apps-logs:
+	$(DOCKER_COMPOSE) -p $(APP_PROJECT) -f $(APPS_COMPOSE) logs -f
+
+# ───────────────────────────────────────────
 # ВСЁ ВМЕСТЕ
 # ───────────────────────────────────────────
 up: infra-up zitadel-up
-	@echo "$(YELLOW)Waiting for databases to be ready...$(NC)"
-	@sleep 5
-	$(MAKE) migrate-all
+	@echo "$(YELLOW)Waiting for infra to be ready...$(NC)"
+	@sleep 10
+	$(MAKE) ENV_FILE=$(ENV_FILE) migrate-all
+	$(MAKE) ENV_FILE=$(ENV_FILE) apps-up
 	@echo "$(YELLOW)Yarmaq is up and running!$(NC)"
 
 down:
-	docker compose -p $(INFRA_PROJECT) -f $(DB_COMPOSE) down
-	docker compose -p $(ZITADEL_PROJECT) -f $(ZITADEL_COMPOSE) down
+	$(DOCKER_COMPOSE) -p $(APP_PROJECT) -f $(APPS_COMPOSE) down
+	$(DOCKER_COMPOSE) -p $(INFRA_PROJECT) -f $(DB_COMPOSE) down
+	$(DOCKER_COMPOSE) -p $(ZITADEL_PROJECT) -f $(ZITADEL_COMPOSE) down
 
 down-v:
-	docker compose -p $(INFRA_PROJECT) -f $(DB_COMPOSE) down -v
-	docker compose -p $(ZITADEL_PROJECT) -f $(ZITADEL_COMPOSE) down -v
+	$(DOCKER_COMPOSE) -p $(APP_PROJECT) -f $(APPS_COMPOSE) down -v
+	$(DOCKER_COMPOSE) -p $(INFRA_PROJECT) -f $(DB_COMPOSE) down -v
+	$(DOCKER_COMPOSE) -p $(ZITADEL_PROJECT) -f $(ZITADEL_COMPOSE) down -v
 
 # ───────────────────────────────────────────
 # ЛОКАЛЬНЫЙ ЗАПУСК (Development)
