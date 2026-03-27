@@ -12,6 +12,7 @@ import (
 type SendNotificationUsecase struct {
 	usecase.BaseUsecase
 	NotificationService interface {
+		Create(ctx context.Context, notification models.Notification) (*models.Notification, error)
 		Send(ctx context.Context, notificationID uuid.UUID) (*models.Notification, error)
 	}
 }
@@ -23,11 +24,24 @@ func NewSendNotificationUsecase(base usecase.BaseUsecase, notificationService no
 	}
 }
 
-func (uc *SendNotificationUsecase) Execute(ctx context.Context, notificationID uuid.UUID) (*models.Notification, error) {
-	uc.Logger.Infow("starting SendNotificationUsecase execution", "id", notificationID)
-	sent, err := uc.NotificationService.Send(ctx, notificationID)
+func (uc *SendNotificationUsecase) Execute(ctx context.Context, notification models.Notification) (*models.Notification, error) {
+	uc.Logger.Infow("starting SendNotificationUsecase execution", "user_id", notification.UserID, "type", notification.Type)
+
+	txCtx, err := uc.Tx.StartTransaction(ctx)
 	if err != nil {
-		uc.Logger.Errorw("failed to send notification", "id", notificationID, "error", err)
+		return nil, err
+	}
+	defer uc.Tx.FinalizeTransaction(txCtx, &err)
+
+	created, err := uc.NotificationService.Create(txCtx, notification)
+	if err != nil {
+		uc.Logger.Errorw("failed to create notification before send", "user_id", notification.UserID, "type", notification.Type, "error", err)
+		return nil, err
+	}
+
+	sent, err := uc.NotificationService.Send(txCtx, created.ID)
+	if err != nil {
+		uc.Logger.Errorw("failed to send notification", "id", created.ID, "error", err)
 		return nil, err
 	}
 

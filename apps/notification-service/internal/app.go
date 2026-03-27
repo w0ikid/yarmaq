@@ -19,10 +19,7 @@ import (
 	"github.com/w0ikid/yarmaq/apps/notification-service/internal/consumers"
 	"github.com/w0ikid/yarmaq/apps/notification-service/internal/container"
 	"github.com/w0ikid/yarmaq/apps/notification-service/internal/handlers" 
-	"github.com/w0ikid/yarmaq/pkg/httpclient"
-	"github.com/w0ikid/yarmaq/pkg/httpclient/accounts"
 	kafkamodule "github.com/w0ikid/yarmaq/pkg/kafka_module"
-	"github.com/w0ikid/yarmaq/pkg/outbox_worker"
 	"github.com/w0ikid/yarmaq/pkg/smtpclient"
 )
 
@@ -34,9 +31,7 @@ type App struct {
 	pg        *repo.Postgres
 	cancel    context.CancelFunc
 
-	kafkaPublisher *kafkamodule.Publisher
-	consumers      []*kafkamodule.Consumer
-	outboxWorker   *outbox_worker.Worker
+	consumers []*kafkamodule.Consumer
 }
 
 func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (*App, error) {
@@ -79,62 +74,25 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 	})
 	appLogger.Info("smtp client initialized", smtpClient)
 
-	// kafka publisher
-	kafkaPublisher, err := kafkamodule.NewPublisher(kafkamodule.Config{
-		Brokers: cfg.Kafka.Brokers,
-	}, appLogger)
-	if err != nil {
-		return nil, fmt.Errorf("init kafka publisher: %w", err)
-	}
-
-	// outbox worker
-	outboxWorker := outbox_worker.NewWorker(
-		pg.DB(),
-		kafkaPublisher,
-		appLogger,
-		outbox_worker.WithInterval(3*time.Second),
-		outbox_worker.WithBatchSize(50),
-	)
-
 	// Репозитории
 	repositories := igorm.NewGormRepository(pg.DB(), appLogger)
-
-	// HTTP Clients
-	httpClient := httpclient.New(cfg.Services.AccountsServiceURL, zitadelClient)
-	accountsClient := accounts.New(cfg.Services.AccountsServiceURL, httpClient)
 
 	// DI контейнер
 	cont := container.NewContainer(
 		ctx,
 		repositories,
 		zitadelClient,
-		accountsClient,
 		smtpClient,
 		appLogger,
 	)
 
 	// kafka consumers
-	resolver := consumers.NewResolver(accountsClient, zitadelClient)
-	transactionCreatedHandler := consumers.NewTransactionCreatedHandler(
-		&cont.NotificationDomain.DispatchUsecase,
-		resolver,
-		resolver,
-		appLogger,
-	)
 	accountCreatedHandler := consumers.NewAccountCreatedHandler(
-		&cont.NotificationDomain.DispatchUsecase,
-		resolver,
+		&cont.NotificationDomain.SendUsecase,
 		appLogger,
 	)
 
 	appConsumers := []*kafkamodule.Consumer{
-		kafkamodule.New(
-			cfg.Kafka.Brokers,
-			"transaction.created",
-			"transaction-service",
-			transactionCreatedHandler,
-			appLogger,
-		),
 		kafkamodule.New(
 			cfg.Kafka.Brokers,
 			"account.created",
@@ -170,15 +128,12 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 		logger:         appLogger,
 		pg:             pg,
 		cancel:         cancel,
-		kafkaPublisher: kafkaPublisher,
-		outboxWorker:   outboxWorker,
 		consumers:      appConsumers,
 	}, nil
 }
 
 // Start запускает HTTP сервер
 func (a *App) Start(ctx context.Context) error {
-	go a.outboxWorker.Run(ctx)
 
 	for _, c := range a.consumers {
 		go c.Run(ctx)

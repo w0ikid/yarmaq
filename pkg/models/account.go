@@ -48,6 +48,7 @@ type AccountResponse struct {
 type AccountCreatedEvent struct {
 	ID       string `json:"id"`
 	UserID   string `json:"user_id"`
+	Number   string `json:"number"`
 	Currency string `json:"currency"`
 	Email    string `json:"email,omitempty"`
 }

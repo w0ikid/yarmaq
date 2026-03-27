@@ -65,12 +65,16 @@ func (uc *CreateAccountUsecase) Execute(ctx context.Context, account models.Acco
 		}
 	}
 
-	payload, err := json.Marshal(models.AccountCreatedEvent{
+	event := models.AccountCreatedEvent{
 		ID:       createdAccount.ID.String(),
 		UserID:   userID,
+		Number:   createdAccount.Number,
 		Currency: createdAccount.Currency,
 		Email:    email,
-	})
+	}
+	uc.Logger.Infow("emitting account.created event", "event", event)
+
+	payload, err := json.Marshal(event)
 	if err != nil {
 		uc.Logger.Errorw("failed to marshal account created event", "account_id", createdAccount.ID, "error", err)
 		return nil, err

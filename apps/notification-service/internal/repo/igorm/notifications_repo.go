@@ -53,7 +53,7 @@ func (r *NotificationRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.N
 	return &dto, nil
 }
 
-func (r *NotificationRepo) GetByUserID(ctx context.Context, userID uuid.UUID) ([]models.Notification, error) {
+func (r *NotificationRepo) GetByUserID(ctx context.Context, userID string) ([]models.Notification, error) {
 	var entities []entity.Notification
 	if err := r.tx(ctx).Where("user_id = ?", userID).Order("created_at desc").Find(&entities).Error; err != nil {
 		return nil, err

@@ -70,7 +70,14 @@ migrate-transactions:
 	GOOSE_DBSTRING="$(TRANSACTION_DB_URL)" \
 	goose -dir migrations up
 
-migrate-all: migrate-accounts migrate-transactions
+migrate-notifications:
+	@echo "$(YELLOW)Running migrations for Notification Service...$(NC)"
+	cd apps/notification-service && \
+	GOOSE_DRIVER=$(GOOSE_DRIVER) \
+	GOOSE_DBSTRING="$(NOTIFICATION_DB_URL)" \
+	goose -dir migrations up
+
+migrate-all: migrate-accounts migrate-transactions migrate-notifications
 
 # ───────────────────────────────────────────
 # ВСЁ ВМЕСТЕ
@@ -97,3 +104,6 @@ run-accounts:
 
 run-transactions:
 	go run apps/transaction-service/cmd/api/main.go
+
+run-notifications:
+	go run apps/notification-service/cmd/api/main.go

@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS notifications (
     id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id    UUID NOT NULL,
+    user_id    VARCHAR(255) NOT NULL,
     type       VARCHAR(100) NOT NULL,
     channel    VARCHAR(20) NOT NULL,
     status     VARCHAR(20) NOT NULL,

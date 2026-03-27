@@ -11,7 +11,6 @@ func NewGormRepository(db *gorm.DB, logger *zap.SugaredLogger) *repo.Repository 
 	log.Info("Initializing GORM repository")
 	return &repo.Repository{
 		ContextTransaction: NewContextTransaction(db),
-		Outbox:             NewOutboxRepo(db, log),
 		Notification:       NewNotificationRepo(db, log),
 	}
 }

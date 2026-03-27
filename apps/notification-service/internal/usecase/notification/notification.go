@@ -6,21 +6,13 @@ import (
 )
 
 type NotificationDomain struct {
-	CreateUsecase    CreateNotificationUsecase
-	GetUsecase       GetNotificationUsecase
-	GetByUserUsecase GetNotificationsByUserUsecase
-	SendUsecase      SendNotificationUsecase
-	DispatchUsecase  DispatchNotificationUsecase
+	SendUsecase SendNotificationUsecase
 }
 
 func NewDomain(baseusecase usecase.BaseUsecase, notificationService notification.Service) NotificationDomain {
 	baseusecase.Logger = baseusecase.Logger.Named("notification_domain")
 
 	return NotificationDomain{
-		CreateUsecase:    NewCreateNotificationUsecase(baseusecase, notificationService),
-		GetUsecase:       NewGetNotificationUsecase(baseusecase, notificationService),
-		GetByUserUsecase: NewGetNotificationsByUserUsecase(baseusecase, notificationService),
-		SendUsecase:      NewSendNotificationUsecase(baseusecase, notificationService),
-		DispatchUsecase:  NewDispatchNotificationUsecase(baseusecase, notificationService),
+		SendUsecase: NewSendNotificationUsecase(baseusecase, notificationService),
 	}
 }

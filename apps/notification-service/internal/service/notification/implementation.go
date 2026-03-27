@@ -15,7 +15,7 @@ import (
 type Service interface {
 	Create(ctx context.Context, notification models.Notification) (*models.Notification, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Notification, error)
-	GetByUserID(ctx context.Context, userID uuid.UUID) ([]models.Notification, error)
+	GetByUserID(ctx context.Context, userID string) ([]models.Notification, error)
 	Send(ctx context.Context, notificationID uuid.UUID) (*models.Notification, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }
@@ -53,7 +53,7 @@ func (s *implementation) GetByID(ctx context.Context, id uuid.UUID) (*models.Not
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *implementation) GetByUserID(ctx context.Context, userID uuid.UUID) ([]models.Notification, error) {
+func (s *implementation) GetByUserID(ctx context.Context, userID string) ([]models.Notification, error) {
 	return s.repo.GetByUserID(ctx, userID)
 }
 
@@ -108,7 +108,7 @@ func (s *implementation) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 func validateNotification(notification models.Notification) error {
-	if notification.UserID == uuid.Nil {
+	if notification.UserID == "" {
 		return fmt.Errorf("%w: user_id is required", errs.ErrValidation)
 	}
 	if notification.Type == "" {
