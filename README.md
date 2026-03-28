@@ -22,7 +22,8 @@ go install github.com/pressly/goose/v3/cmd/goose@latest
 yarmaq/
 ├── apps/
 │   ├── accounts-service/     # Account and balance management
-│   └── transaction-service/  # Transactions, Saga, Outbox
+│   ├── transaction-service/  # Transactions, Saga, Outbox
+│   └── notification-service/ # Email/SMS notifications via Kafka
 ├── pkg/                      # Shared packages (models, kafka, httpclient, etc.)
 ├── deployment/               # Docker Compose, init scripts
 └── secrets/                  # Zitadel JWT keys
@@ -36,6 +37,9 @@ Manages user accounts. Responsible for account creation, balance updates (debit/
 ### transaction-service
 Creates transactions and orchestrates their execution via Saga. Uses the Outbox pattern for reliable event publishing to Kafka.
 
+### notification-service
+Consumes events from Kafka (e.g., `transaction.created`) and sends notifications to users.
+
 **Transaction flow:**
 ```
 POST /transactions
@@ -47,6 +51,7 @@ Outbox Worker
 
 Consumer "transaction.created"
   → Saga: HOLD (debit) → DEPOSITING (credit) → COMPLETED
+  → Notification: Send status update to user
   → on error: REFUND → FAILED
 ```
 
@@ -54,70 +59,55 @@ Consumer "transaction.created"
 
 ### 1. Configure environment
 
-Create a `.env` file in the project root (or copy and adjust the example below):
+Create a `.env` file in the project root (or copy `.env.example`):
 
 ```env
-# ACCOUNTS SERVICE
-ACCOUNTS_APP_PORT=8081
-ACCOUNTS_POSTGRES_DB_NAME=yarmaq_accounts
-ACCOUNTS_KAFKA_BROKERS=localhost:9092
-
-# TRANSACTION SERVICE
-TRANSACTION_APP_PORT=8082
-TRANSACTION_POSTGRES_DB_NAME=yarmaq_transactions
-
-# POSTGRES
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5433
-POSTGRES_USER=danial
-POSTGRES_PASSWORD=yarmaq_pass
-POSTGRES_SSLMODE=disable
-
-# MIGRATION URLS
-ACCOUNTS_DB_URL=postgres://danial:yarmaq_pass@localhost:5433/yarmaq_accounts?sslmode=disable
-TRANSACTION_DB_URL=postgres://danial:yarmaq_pass@localhost:5433/yarmaq_transactions?sslmode=disable
-
 # ZITADEL
 ZITADEL_DOMAIN=zitadel.localhost
-ZITADEL_EXTERNALPORT=8080
 ZITADEL_MASTERKEY=MasterkeyNeedsToHave32Characters
 ZITADEL_KEY_PATH=secrets/zitadel.json
+
+# POSTGRES (Global for infra)
+POSTGRES_USER=danial
+POSTGRES_PASSWORD=yarmaq_pass
+
+# SERVICES DB URLs (for Goose)
+ACCOUNTS_DB_URL=postgres://danial:yarmaq_pass@localhost:5433/yarmaq_accounts?sslmode=disable
+TRANSACTION_DB_URL=postgres://danial:yarmaq_pass@localhost:5433/yarmaq_transactions?sslmode=disable
+NOTIFICATION_DB_URL=postgres://danial:yarmaq_pass@localhost:5433/yarmaq_notifications?sslmode=disable
 ```
 
-> ⚠️ `ZITADEL_MASTERKEY` must be exactly 32 characters. The values above are for **local development only** — change them before exposing to any network.
+### 2. Run the entire stack
 
-### 2. Start infrastructure + run migrations
+The easiest way to start everything (Postgres, Kafka, Zitadel, Migrations, and Microservices) is:
 
 ```bash
 make up
 ```
 
-This starts Postgres, Kafka, Zookeeper, Zitadel and runs all migrations automatically.
+Wait approximately 10-15 seconds for Zitadel and Kafka to initialize.
 
-### 3. Run services
+### 3. Check logs
 
 ```bash
-# Terminal 1
-make run-accounts
-
-# Terminal 2
-make run-transactions
+make apps-logs
 ```
 
 ## Makefile Commands
 
-| Command                     | Description                                 |
-|-----------------------------|---------------------------------------------|
-| `make up`                   | Start all infrastructure and run migrations |
-| `make down`                 | Stop all containers (keep data)             |
-| `make down-v`               | Stop all containers and delete volumes      |
-| `make infra-up`             | Start Postgres, Kafka only                  |
-| `make zitadel-up`           | Start Zitadel only                          |
-| `make migrate-all`          | Run migrations for all services             |
-| `make migrate-accounts`     | Run migrations for accounts-service         |
-| `make migrate-transactions` | Run migrations for transaction-service      |
-| `make run-accounts`         | Run accounts-service locally                |
-| `make run-transactions`     | Run transaction-service locally             |
+| Command                     | Description                                      |
+|-----------------------------|--------------------------------------------------|
+| `make up`                   | Start everything (infra + apps + migrations)     |
+| `make down`                 | Stop everything (keep data)                      |
+| `make down-v`               | Stop everything and DELETE volumes               |
+| `make infra-up`             | Start Postgres and Kafka only                    |
+| `make zitadel-up`           | Start Zitadel only                               |
+| `make apps-up`              | Build and start microservices in Docker          |
+| `make apps-logs`            | View microservices logs                          |
+| `make migrate-all`          | Run migrations for all services                  |
+| `make run-accounts`         | Run accounts-service locally (no Docker)         |
+| `make run-transactions`     | Run transaction-service locally (no Docker)      |
+| `make run-notifications`    | Run notification-service locally (no Docker)     |
 
 ## API
 
@@ -137,7 +127,6 @@ Body:
 }
 
 GET /api/v1/transactions/:id
-Headers: Authorization: Bearer <token>
 ```
 
 ### accounts-service (`localhost:8081`)
@@ -152,18 +141,20 @@ POST /api/v1/accounts/:id/balance
 
 [Zitadel](https://zitadel.com) is used as the Identity Provider. JWT tokens are verified via the JWKS endpoint.
 
-- Zitadel runs on `http://zitadel.localhost:8080`
-- Place the service key in `secrets/zitadel.json`
-- Default version: `v4.11.0`
+- Local domain: `zitadel.localhost:8080`
+- Configured via `secrets/zitadel.json`
+- Default version: `v2.x` / `v2.42` (check `docker-compose.zitadel.yml`)
 
 ## Tech Stack
 
-| Component      | Technology                 |
-|----------------|----------------------------|
-| Language       | Go 1.25.5                  |
-| HTTP           | Fiber v2                   |
-| ORM            | GORM + PostgreSQL 16       |
-| Message Broker | Kafka (segmentio/kafka-go) |
-| Auth           | Zitadel v4.11.0 (OIDC/JWT) |
-| Migrations     | Goose                      |
-| Patterns       | Outbox, Saga, CQRS         |
+| Component      | Technology                  |
+|----------------|-----------------------------|
+| Language       | Go 1.25.5                   |
+| HTTP Framework | Fiber v2                    |
+| Database       | PostgreSQL 16               |
+| ORM            | GORM                        |
+| Message Broker | Kafka                       |
+| Auth           | Zitadel (OIDC/JWT)          |
+| Migrations     | Goose                       |
+| Deployment     | Docker Compose + Traefik    |
+| Patterns       | Outbox, Saga, Microservices |
