@@ -1,0 +1,761 @@
+{
+  "info": {
+    "_postman_id": "a054910f-f281-4cfa-9253-4ead527ae3c9",
+    "name": "yarmaq",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "40588041"
+  },
+  "item": [
+    {
+      "name": "accounts",
+      "item": [
+        {
+          "name": "support",
+          "item": [
+            {
+              "name": "get by number",
+              "request": {
+                "auth": {
+                  "type": "oauth2",
+                  "oauth2": [
+                    {
+                      "key": "clientId",
+                      "value": "364774513461755908",
+                      "type": "string"
+                    },
+                    {
+                      "key": "tokenName",
+                      "value": "bfasdf",
+                      "type": "string"
+                    },
+                    {
+                      "key": "accessTokenUrl",
+                      "value": "http://zitadel.localhost:8080/oauth/v2/token",
+                      "type": "string"
+                    },
+                    {
+                      "key": "authUrl",
+                      "value": "http://zitadel.localhost:8080/oauth/v2/authorize",
+                      "type": "string"
+                    },
+                    {
+                      "key": "redirect_uri",
+                      "value": "https://oauth.pstmn.io/v1/callback",
+                      "type": "string"
+                    },
+                    {
+                      "key": "useBrowser",
+                      "value": false,
+                      "type": "boolean"
+                    },
+                    {
+                      "key": "scope",
+                      "value": "openid profile email",
+                      "type": "string"
+                    },
+                    {
+                      "key": "grant_type",
+                      "value": "authorization_code_with_pkce",
+                      "type": "string"
+                    },
+                    {
+                      "key": "addTokenTo",
+                      "value": "header",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{ACCOUNTS_URL}}api/v1/accounts/by-user?user_id=365106625431732228",
+                  "host": [
+                    "{{ACCOUNTS_URL}}api"
+                  ],
+                  "path": [
+                    "v1",
+                    "accounts",
+                    "by-user"
+                  ],
+                  "query": [
+                    {
+                      "key": "user_id",
+                      "value": "365106625431732228",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "create account",
+          "request": {
+            "auth": {
+              "type": "oauth2",
+              "oauth2": [
+                {
+                  "key": "tokenName",
+                  "value": "timauserfirst",
+                  "type": "string"
+                },
+                {
+                  "key": "clientId",
+                  "value": "364774513461755908",
+                  "type": "string"
+                },
+                {
+                  "key": "accessTokenUrl",
+                  "value": "http://zitadel.localhost:8080/oauth/v2/token",
+                  "type": "string"
+                },
+                {
+                  "key": "authUrl",
+                  "value": "http://zitadel.localhost:8080/oauth/v2/authorize",
+                  "type": "string"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "https://oauth.pstmn.io/v1/callback",
+                  "type": "string"
+                },
+                {
+                  "key": "useBrowser",
+                  "value": false,
+                  "type": "boolean"
+                },
+                {
+                  "key": "scope",
+                  "value": "openid profile email",
+                  "type": "string"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "authorization_code_with_pkce",
+                  "type": "string"
+                },
+                {
+                  "key": "addTokenTo",
+                  "value": "header",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"currency\": \"USD\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{ACCOUNTS_URL_DEV}}",
+              "host": [
+                "{{ACCOUNTS_URL_DEV}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update account balance",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "get account",
+          "request": {
+            "auth": {
+              "type": "oauth2",
+              "oauth2": [
+                {
+                  "key": "clientId",
+                  "value": "364774513461755908",
+                  "type": "string"
+                },
+                {
+                  "key": "tokenName",
+                  "value": "bfasdf",
+                  "type": "string"
+                },
+                {
+                  "key": "accessTokenUrl",
+                  "value": "http://zitadel.localhost:8080/oauth/v2/token",
+                  "type": "string"
+                },
+                {
+                  "key": "authUrl",
+                  "value": "http://zitadel.localhost:8080/oauth/v2/authorize",
+                  "type": "string"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "https://oauth.pstmn.io/v1/callback",
+                  "type": "string"
+                },
+                {
+                  "key": "useBrowser",
+                  "value": false,
+                  "type": "boolean"
+                },
+                {
+                  "key": "scope",
+                  "value": "openid profile email",
+                  "type": "string"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "authorization_code_with_pkce",
+                  "type": "string"
+                },
+                {
+                  "key": "addTokenTo",
+                  "value": "header",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ACCOUNTS_URL}}api/v1/accounts/6919b3a0-8f31-4bfe-b229-0de530d196b9",
+              "host": [
+                "{{ACCOUNTS_URL}}api"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "6919b3a0-8f31-4bfe-b229-0de530d196b9"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "gey my accounts",
+          "request": {
+            "auth": {
+              "type": "oauth2",
+              "oauth2": [
+                {
+                  "key": "clientId",
+                  "value": "364774513461755908",
+                  "type": "string"
+                },
+                {
+                  "key": "tokenName",
+                  "value": "bfasdf",
+                  "type": "string"
+                },
+                {
+                  "key": "accessTokenUrl",
+                  "value": "http://zitadel.localhost:8080/oauth/v2/token",
+                  "type": "string"
+                },
+                {
+                  "key": "authUrl",
+                  "value": "http://zitadel.localhost:8080/oauth/v2/authorize",
+                  "type": "string"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "https://oauth.pstmn.io/v1/callback",
+                  "type": "string"
+                },
+                {
+                  "key": "useBrowser",
+                  "value": false,
+                  "type": "boolean"
+                },
+                {
+                  "key": "scope",
+                  "value": "openid profile email",
+                  "type": "string"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "authorization_code_with_pkce",
+                  "type": "string"
+                },
+                {
+                  "key": "addTokenTo",
+                  "value": "header",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ACCOUNTS_URL}}api/v1/accounts/me",
+              "host": [
+                "{{ACCOUNTS_URL}}api"
+              ],
+              "path": [
+                "v1",
+                "accounts",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "transactions",
+      "item": [
+        {
+          "name": "post transaction",
+          "request": {
+            "auth": {
+              "type": "oauth2",
+              "oauth2": [
+                {
+                  "key": "tokenName",
+                  "value": "sometestusername",
+                  "type": "string"
+                },
+                {
+                  "key": "clientId",
+                  "value": "364774513461755908",
+                  "type": "string"
+                },
+                {
+                  "key": "accessTokenUrl",
+                  "value": "http://zitadel.localhost:8080/oauth/v2/token",
+                  "type": "string"
+                },
+                {
+                  "key": "authUrl",
+                  "value": "http://zitadel.localhost:8080/oauth/v2/authorize",
+                  "type": "string"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "https://oauth.pstmn.io/v1/callback",
+                  "type": "string"
+                },
+                {
+                  "key": "useBrowser",
+                  "value": false,
+                  "type": "boolean"
+                },
+                {
+                  "key": "scope",
+                  "value": "openid profile email",
+                  "type": "string"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "authorization_code_with_pkce",
+                  "type": "string"
+                },
+                {
+                  "key": "addTokenTo",
+                  "value": "header",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"type\": \"TRANSFER\",\r\n    \"to_account_number\": \"KZ450200100000001\",\r\n    \"amount\": 5000,\r\n    \"currency\": \"KZT\",\r\n    \"idempotency_key\": \"{{$guid}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8082/api/v1/transactions/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8082",
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "deposit",
+          "request": {
+            "auth": {
+              "type": "oauth2",
+              "oauth2": [
+                {
+                  "key": "tokenName",
+                  "value": "ostotester",
+                  "type": "string"
+                },
+                {
+                  "key": "clientId",
+                  "value": "364774513461755908",
+                  "type": "string"
+                },
+                {
+                  "key": "accessTokenUrl",
+                  "value": "http://zitadel.localhost:8080/oauth/v2/token",
+                  "type": "string"
+                },
+                {
+                  "key": "authUrl",
+                  "value": "http://zitadel.localhost:8080/oauth/v2/authorize",
+                  "type": "string"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "https://oauth.pstmn.io/v1/callback",
+                  "type": "string"
+                },
+                {
+                  "key": "useBrowser",
+                  "value": false,
+                  "type": "boolean"
+                },
+                {
+                  "key": "scope",
+                  "value": "openid profile email",
+                  "type": "string"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "authorization_code_with_pkce",
+                  "type": "string"
+                },
+                {
+                  "key": "addTokenTo",
+                  "value": "header",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"amount\": 5000,\r\n    \"currency\": \"KZT\",\r\n    \"idempotency_key\": \"{{$guid}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{TRANSACTION_URL_DEV}}/deposit",
+              "host": [
+                "{{TRANSACTION_URL_DEV}}"
+              ],
+              "path": [
+                "deposit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "transfer",
+          "request": {
+            "auth": {
+              "type": "oauth2",
+              "oauth2": [
+                {
+                  "key": "tokenName",
+                  "value": "ostotester",
+                  "type": "string"
+                },
+                {
+                  "key": "clientId",
+                  "value": "364774513461755908",
+                  "type": "string"
+                },
+                {
+                  "key": "accessTokenUrl",
+                  "value": "http://zitadel.localhost:8080/oauth/v2/token",
+                  "type": "string"
+                },
+                {
+                  "key": "authUrl",
+                  "value": "http://zitadel.localhost:8080/oauth/v2/authorize",
+                  "type": "string"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "https://oauth.pstmn.io/v1/callback",
+                  "type": "string"
+                },
+                {
+                  "key": "useBrowser",
+                  "value": false,
+                  "type": "boolean"
+                },
+                {
+                  "key": "scope",
+                  "value": "openid profile email",
+                  "type": "string"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "authorization_code_with_pkce",
+                  "type": "string"
+                },
+                {
+                  "key": "addTokenTo",
+                  "value": "header",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"to_account_number\": \"KZ660200100000011\",\r\n    \"amount\": 500,\r\n    \"currency\": \"KZT\",\r\n    \"idempotency_key\": \"{{$guid}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{TRANSACTION_URL_DEV}}/transfer",
+              "host": [
+                "{{TRANSACTION_URL_DEV}}"
+              ],
+              "path": [
+                "transfer"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "withdraw",
+          "request": {
+            "auth": {
+              "type": "oauth2",
+              "oauth2": [
+                {
+                  "key": "tokenName",
+                  "value": "legendatwo",
+                  "type": "string"
+                },
+                {
+                  "key": "clientId",
+                  "value": "364774513461755908",
+                  "type": "string"
+                },
+                {
+                  "key": "accessTokenUrl",
+                  "value": "http://zitadel.localhost:8080/oauth/v2/token",
+                  "type": "string"
+                },
+                {
+                  "key": "authUrl",
+                  "value": "http://zitadel.localhost:8080/oauth/v2/authorize",
+                  "type": "string"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "https://oauth.pstmn.io/v1/callback",
+                  "type": "string"
+                },
+                {
+                  "key": "useBrowser",
+                  "value": false,
+                  "type": "boolean"
+                },
+                {
+                  "key": "scope",
+                  "value": "openid profile email",
+                  "type": "string"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "authorization_code_with_pkce",
+                  "type": "string"
+                },
+                {
+                  "key": "addTokenTo",
+                  "value": "header",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"amount\": 5000,\r\n    \"currency\": \"KZT\",\r\n    \"idempotency_key\": \"{{$guid}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8082/api/v1/transactions/withdraw",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8082",
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                "withdraw"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "oauth2",
+    "oauth2": [
+      {
+        "key": "refreshRequestParams",
+        "value": [],
+        "type": "any"
+      },
+      {
+        "key": "tokenRequestParams",
+        "value": [],
+        "type": "any"
+      },
+      {
+        "key": "authRequestParams",
+        "value": [],
+        "type": "any"
+      },
+      {
+        "key": "tokenName",
+        "value": "newuseraccounts",
+        "type": "string"
+      },
+      {
+        "key": "challengeAlgorithm",
+        "value": "S256",
+        "type": "string"
+      },
+      {
+        "key": "scope",
+        "value": "openid profile email",
+        "type": "string"
+      },
+      {
+        "key": "redirect_uri",
+        "value": "https://oauth.pstmn.io/v1/callback",
+        "type": "string"
+      },
+      {
+        "key": "grant_type",
+        "value": "authorization_code_with_pkce",
+        "type": "string"
+      },
+      {
+        "key": "clientId",
+        "value": "364528202355376132",
+        "type": "string"
+      },
+      {
+        "key": "authUrl",
+        "value": "http://zitadel.localhost:8080/oauth/v2/authorize",
+        "type": "string"
+      },
+      {
+        "key": "addTokenTo",
+        "value": "header",
+        "type": "string"
+      },
+      {
+        "key": "client_authentication",
+        "value": "header",
+        "type": "string"
+      },
+      {
+        "key": "accessTokenUrl",
+        "value": "http://zitadel.localhost:8080/oauth/v2/token",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          "const services = [\"ACCOUNTS\", \"TRANSACTIONS\"];\r",
+          "\r",
+          "const env = pm.environment.get(\"environment\"); // \"local\" или \"dev\"\r",
+          "\r",
+          "services.forEach(service => {\r",
+          "    const urlVar = env === \"dev\"\r",
+          "        ? `${service}_URL_DEV`\r",
+          "        : `${service}_URL_LOCAL`;\r",
+          "    \r",
+          "    // Устанавливаем базовый URL для сервиса\r",
+          "    pm.environment.set(`${service}_URL`, pm.environment.get(urlVar));\r",
+          "});"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "ACCOUNTS_URL_LOCAL",
+      "value": ""
+    },
+    {
+      "key": "TRANSACTION_URL_LOCAL",
+      "value": ""
+    },
+    {
+      "key": "ACCOUNTS_URL_DEV",
+      "value": ""
+    },
+    {
+      "key": "TRANSACTION_URL_DEV",
+      "value": ""
+    },
+    {
+      "key": "environment",
+      "value": ""
+    }
+  ]
+}

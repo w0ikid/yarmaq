@@ -19,7 +19,6 @@ func New(ctx context.Context, domain, api, keyPath string) (*Client, error) {
     scopes := []string{
         oidc.ScopeOpenID,
         "urn:zitadel:iam:org:project:id:zitadel:aud",
-        "zitadel.api",
     }
 
     tokenSource := middleware.JWTProfileFromPath(ctx, keyPath)

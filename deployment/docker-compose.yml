@@ -7,6 +7,8 @@ services:
     restart: unless-stopped
     volumes:
       - ../secrets:/app/secrets:ro
+    extra_hosts:
+      - "zitadel.localhost:172.18.0.1"
     env_file:
       - ../.env
     environment:
@@ -14,9 +16,11 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_SERVICE_DB=yarmaq_accounts
       - KAFKA_BROKERS=kafka:29092
-      - ZITADEL_JWKS_URL=http://${ZITADEL_DOMAIN}/oauth/v2/keys
-      - ZITADEL_DOMAIN_BACKEND=http://${ZITADEL_DOMAIN}
-      - ZITADEL_API_BACKEND=${ZITADEL_DOMAIN}:80
+      - ZITADEL_API_BACKEND=zitadel.localhost:8080
+      - ZITADEL_DOMAIN_BACKEND=http://zitadel.localhost:8080
+      - ZITADEL_JWKS_URL=http://zitadel.localhost:8080/oauth/v2/keys
+      - ACCOUNTS_SERVICE_URL=http://yarmaq-accounts-service:8081
+      - TRANSACTION_SERVICE_URL=http://yarmaq-transaction-service:8082
     networks:
       - zitadel
       - default
@@ -37,14 +41,18 @@ services:
       - ../secrets:/app/secrets:ro
     env_file:
       - ../.env
+    extra_hosts:
+      - "zitadel.localhost:172.18.0.1"
     environment:
       - POSTGRES_HOST=infra-postgres
       - POSTGRES_PORT=5432
       - POSTGRES_SERVICE_DB=yarmaq_transactions
       - KAFKA_BROKERS=kafka:29092
-      - ZITADEL_JWKS_URL=http://${ZITADEL_DOMAIN}/oauth/v2/keys
-      - ZITADEL_DOMAIN_BACKEND=http://${ZITADEL_DOMAIN}
-      - ZITADEL_API_BACKEND=${ZITADEL_DOMAIN}:80
+      - ZITADEL_API_BACKEND=zitadel.localhost:8080
+      - ZITADEL_DOMAIN_BACKEND=http://zitadel.localhost:8080
+      - ZITADEL_JWKS_URL=http://zitadel.localhost:8080/oauth/v2/keys
+      - ACCOUNTS_SERVICE_URL=http://yarmaq-accounts-service:8081
+      - TRANSACTION_SERVICE_URL=http://yarmaq-transaction-service:8082
     networks:
       - zitadel
       - default
@@ -72,6 +80,8 @@ services:
       - ZITADEL_JWKS_URL=http://${ZITADEL_DOMAIN}/oauth/v2/keys
       - ZITADEL_DOMAIN_BACKEND=http://${ZITADEL_DOMAIN}
       - ZITADEL_API_BACKEND=${ZITADEL_DOMAIN}:80
+      - ACCOUNTS_SERVICE_URL=http://yarmaq-accounts-service:8081
+      - TRANSACTION_SERVICE_URL=http://yarmaq-transaction-service:8082
     networks:
       - zitadel
       - default
