@@ -132,7 +132,7 @@ for ENTRY in $SERVICE_USERS; do
     skip "service user '$SVC_USERNAME' already exists (id=$USER_ID)"
   else
     log "creating service user '$SVC_USERNAME'..."
-    USER_RESP=$(zapi POST "/management/v1/machines" \
+    USER_RESP=$(zapi POST "/management/v1/users/machine" \
       -d "{\"userName\":\"$SVC_USERNAME\",\"name\":\"$SVC_USERNAME\",\"description\":\"Service account for $SVC_USERNAME\",\"accessTokenType\":\"ACCESS_TOKEN_TYPE_JWT\"}")
     USER_ID=$(echo "$USER_RESP" | grep -o '"userId":"[^"]*"' | cut -d'"' -f4)
     [ -n "$USER_ID" ] || fail "failed to create service user '$SVC_USERNAME'"

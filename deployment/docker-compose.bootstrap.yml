@@ -5,11 +5,8 @@ services:
     image: alpine/curl:latest
     container_name: yarmaq-bootstrap
     volumes:
-      # PAT от Zitadel (создаётся автоматически при первом старте)
       - zitadel-bootstrap:/zitadel/bootstrap:ro
-      # Куда сохранять сгенерированные ключи (../secrets относительно deployment/)
       - ../secrets:/secrets:rw
-      # Сам скрипт
       - ./init-zitadel/bootstrap.sh:/bootstrap.sh:ro
     entrypoint: ["/bin/sh", "/bootstrap.sh"]
     environment:
@@ -24,6 +21,7 @@ services:
 volumes:
   zitadel-bootstrap:
     external: true
+    name: yarmaq-zitadel_zitadel-bootstrap
 
 networks:
   zitadel:

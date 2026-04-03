@@ -25,13 +25,12 @@ func NewRouter(router fiber.Router, handler *Handlers) *Router {
 }
 
 func (r *Router) SetupRoutes(logger *zap.SugaredLogger) {
-
-	// routes
 	accountsRouter := r.router.Group("/accounts")
 	accountsRouter.Get("/ping", func(c *fiber.Ctx) error {
 		logger.Info("ping received", time.Now())
 		return c.Status(200).JSON(fiber.Map{"message": "pong"})
 	})
+
 	accountsRouter.Use(
 		middleware.AuthMiddleware(r.handler.JWKS),
 		middleware.UserContextMiddleware(),

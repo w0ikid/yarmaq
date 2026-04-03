@@ -3,6 +3,7 @@ package account
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase/account"
+	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase/ledger"
 	"github.com/w0ikid/yarmaq/pkg/ctxkeys"
 	"github.com/w0ikid/yarmaq/pkg/errs"
 	"github.com/w0ikid/yarmaq/pkg/models"
@@ -11,6 +12,7 @@ import (
 
 type HandlerDeps struct {
 	AccountDomain account.AccountDomain
+	LedgerDomain  ledger.LedgerDomain
 	Logger        *zap.SugaredLogger
 }
 
@@ -20,17 +22,22 @@ type Handler interface {
 	GetAccountsByUserID(c *fiber.Ctx) error
 	GetAccountByNumberAndCurrency(c *fiber.Ctx) error
 	GetAccountByUserIDAndCurrency(c *fiber.Ctx) error
+
+	// ledger handlers
+	GetByAccountID(c *fiber.Ctx) error
 }
 
 type handler struct {
-	domain account.AccountDomain
-	logger *zap.SugaredLogger
+	accountDomain account.AccountDomain
+	ledgerDomain  ledger.LedgerDomain
+	logger        *zap.SugaredLogger
 }
 
 func NewHandler(deps HandlerDeps) Handler {
 	return &handler{
-		domain: deps.AccountDomain,
-		logger: deps.Logger.Named("account_handler"),
+		accountDomain: deps.AccountDomain,
+		ledgerDomain:  deps.LedgerDomain,
+		logger:        deps.Logger.Named("account_handler"),
 	}
 }
 
@@ -47,7 +54,7 @@ func (h *handler) CreateAccount(c *fiber.Ctx) error {
 		Currency: req.Currency,
 	}
 
-	created, err := h.domain.CreateUsecase.Execute(c.Context(), acc)
+	created, err := h.accountDomain.CreateUsecase.Execute(c.Context(), acc)
 	if err != nil {
 		h.logger.Errorw("failed to create account", "error", err)
 		return errs.HandleHTTP(c, err)
@@ -57,7 +64,7 @@ func (h *handler) CreateAccount(c *fiber.Ctx) error {
 }
 
 func (h *handler) GetMyAccounts(c *fiber.Ctx) error {
-	accounts, err := h.domain.GetAccountUsecase.ExecuteAllByUserID(c.Context(), ctxkeys.GetUserID(c.UserContext()))
+	accounts, err := h.accountDomain.GetAccountUsecase.ExecuteAllByUserID(c.Context(), ctxkeys.GetUserID(c.UserContext()))
 	if err != nil {
 		h.logger.Errorw("failed to get user accounts", "error", err)
 		return errs.HandleHTTP(c, err)
@@ -72,7 +79,7 @@ func (h *handler) GetAccountsByUserID(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "user_id is required"})
 	}
 
-	accounts, err := h.domain.GetAccountUsecase.ExecuteAllByUserID(c.Context(), userID)
+	accounts, err := h.accountDomain.GetAccountUsecase.ExecuteAllByUserID(c.Context(), userID)
 	if err != nil {
 		h.logger.Errorw("failed to get accounts by user id", "user_id", userID, "error", err)
 		return errs.HandleHTTP(c, err)
@@ -88,7 +95,7 @@ func (h *handler) GetAccountByNumberAndCurrency(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "number and currency are required"})
 	}
 
-	acc, err := h.domain.GetAccountUsecase.ExecuteByNumberAndCurrency(c.Context(), number, currency)
+	acc, err := h.accountDomain.GetAccountUsecase.ExecuteByNumberAndCurrency(c.Context(), number, currency)
 	if err != nil {
 		h.logger.Errorw("failed to get account by number and currency", "number", number, "currency", currency, "error", err)
 		return errs.HandleHTTP(c, err)
@@ -107,7 +114,7 @@ func (h *handler) GetAccountByUserIDAndCurrency(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "user_id and currency are required"})
 	}
 
-	acc, err := h.domain.GetAccountUsecase.ExecuteByUserIDAndCurrency(c.Context(), userID, currency)
+	acc, err := h.accountDomain.GetAccountUsecase.ExecuteByUserIDAndCurrency(c.Context(), userID, currency)
 	if err != nil {
 		h.logger.Errorw("failed to get account by user id and currency", "user_id", userID, "currency", currency, "error", err)
 		return errs.HandleHTTP(c, err)

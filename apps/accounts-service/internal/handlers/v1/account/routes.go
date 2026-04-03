@@ -24,4 +24,7 @@ func (r *Router) SetupRoutes() {
 	r.router.Get("/by-user", middleware.RBACMiddleware(models.RoleSupport, models.RoleAdmin), r.handler.GetAccountsByUserID)
 	r.router.Get("/by-number", middleware.RBACMiddleware(models.RoleSupport, models.RoleAdmin), r.handler.GetAccountByNumberAndCurrency)
 	r.router.Get("/by-user-currency", middleware.RBACMiddleware(models.RoleSupport, models.RoleAdmin), r.handler.GetAccountByUserIDAndCurrency)
+
+	// ledger routes
+	r.router.Get("/:accountId/ledger", middleware.RBACMiddleware(models.RoleSupport), r.handler.GetByAccountID)
 }
