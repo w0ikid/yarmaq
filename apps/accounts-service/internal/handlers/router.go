@@ -27,6 +27,6 @@ func (r *Router) SetupRoutes(logger *zap.SugaredLogger) {
 	}))
 
 	// API v1 routes
-	v1Group := r.app.Group("/api/v1")
+	v1Group := r.app.Group("/api/v1/accounts")
 	v1.NewRouter(v1Group, r.handlers.V1).SetupRoutes(logger)
 }
