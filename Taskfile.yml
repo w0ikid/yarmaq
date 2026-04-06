@@ -1,0 +1,250 @@
+version: "3"
+
+dotenv:
+  - '{{.ENV_FILE | default ".env"}}'
+
+vars:
+  GOOSE_DRIVER: '{{.GOOSE_DRIVER | default "postgres"}}'
+  DOCKER_DIR: ./deployment
+  DB_COMPOSE: "{{.DOCKER_DIR}}/docker-compose.infra.yml"
+  ZITADEL_COMPOSE: "{{.DOCKER_DIR}}/docker-compose.zitadel.yml"
+  BOOTSTRAP_COMPOSE: "{{.DOCKER_DIR}}/docker-compose.bootstrap.yml"
+  APPS_COMPOSE: "{{.DOCKER_DIR}}/docker-compose.yml"
+
+  INFRA_PROJECT: yarmaq-infra
+  ZITADEL_PROJECT: yarmaq-zitadel
+  APP_PROJECT: yarmaq-app
+
+  APP_SERVICES: "accounts-service transaction-service notification-service"
+
+  DC: docker compose
+
+# ─────────────────────────────────────────────
+# ИНФРАСТРУКТУРА
+# ─────────────────────────────────────────────
+tasks:
+  infra:up:
+    desc: Запустить Postgres, Kafka и т.д.
+    cmds:
+      - "{{.DC}} -p {{.INFRA_PROJECT}} -f {{.DB_COMPOSE}} up -d"
+
+  infra:down:
+    desc: Остановить инфраструктуру (сохранить данные)
+    cmds:
+      - "{{.DC}} -p {{.INFRA_PROJECT}} -f {{.DB_COMPOSE}} down"
+
+  infra:down-v:
+    desc: Остановить инфраструктуру и удалить volumes
+    cmds:
+      - "{{.DC}} -p {{.INFRA_PROJECT}} -f {{.DB_COMPOSE}} down -v"
+
+  # ─────────────────────────────────────────────
+  # ZITADEL
+  # ─────────────────────────────────────────────
+  zitadel:up:
+    desc: Запустить Zitadel
+    cmds:
+      - "{{.DC}} -p {{.ZITADEL_PROJECT}} -f {{.ZITADEL_COMPOSE}} up -d --wait"
+
+  zitadel:down:
+    desc: Остановить Zitadel
+    cmds:
+      - "{{.DC}} -p {{.ZITADEL_PROJECT}} -f {{.ZITADEL_COMPOSE}} down"
+
+  zitadel:down-v:
+    desc: Остановить Zitadel и удалить volumes
+    cmds:
+      - "{{.DC}} -p {{.ZITADEL_PROJECT}} -f {{.ZITADEL_COMPOSE}} down -v"
+
+  zitadel:bootstrap:
+    desc: Выполнить bootstrap Zitadel (запустить после zitadel:up)
+    cmds:
+      - "{{.DC}} -f {{.BOOTSTRAP_COMPOSE}} up --abort-on-container-exit --remove-orphans"
+      - "{{.DC}} -f {{.BOOTSTRAP_COMPOSE}} down"
+
+  # ─────────────────────────────────────────────
+  # МИГРАЦИИ (Goose)
+  # ─────────────────────────────────────────────
+  migrate:accounts:
+    desc: Накатить миграции для Accounts Service
+    cmds:
+      - cmd: |
+          cd apps/accounts-service && \
+          GOOSE_DRIVER={{.GOOSE_DRIVER}} \
+          GOOSE_DBSTRING="{{.ACCOUNTS_DB_URL}}" \
+          goose -dir migrations up
+
+  migrate:transactions:
+    desc: Накатить миграции для Transaction Service
+    cmds:
+      - cmd: |
+          cd apps/transaction-service && \
+          GOOSE_DRIVER={{.GOOSE_DRIVER}} \
+          GOOSE_DBSTRING="{{.TRANSACTION_DB_URL}}" \
+          goose -dir migrations up
+
+  migrate:notifications:
+    desc: Накатить миграции для Notification Service
+    cmds:
+      - cmd: |
+          cd apps/notification-service && \
+          GOOSE_DRIVER={{.GOOSE_DRIVER}} \
+          GOOSE_DBSTRING="{{.NOTIFICATION_DB_URL}}" \
+          goose -dir migrations up
+
+  migrate:all:
+    desc: Накатить миграции для всех сервисов
+    deps:
+      - migrate:accounts
+      - migrate:transactions
+      - migrate:notifications
+
+  # ─────────────────────────────────────────────
+  # ПРИЛОЖЕНИЯ — все сервисы
+  # ─────────────────────────────────────────────
+  apps:up:
+    desc: Собрать и запустить все микросервисы
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} up -d --build"
+
+  apps:down:
+    desc: Остановить все микросервисы и удалить volumes
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} down -v"
+
+  apps:logs:
+    desc: Показать логи всех микросервисов
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} logs -f"
+
+  # ─────────────────────────────────────────────
+  # ПРИЛОЖЕНИЯ — один сервис (передаётся через CLI_ARGS)
+  #   Пример: task app:up -- accounts-service
+  # ─────────────────────────────────────────────
+  app:up:
+    desc: "Собрать и поднять один микросервис. Пример: task app:up -- accounts-service"
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} up -d --build {{.CLI_ARGS}}"
+
+  app:start:
+    desc: "Запустить остановленный микросервис. Пример: task app:start -- accounts-service"
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} start {{.CLI_ARGS}}"
+
+  app:stop:
+    desc: "Остановить микросервис. Пример: task app:stop -- accounts-service"
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} stop {{.CLI_ARGS}}"
+
+  app:restart:
+    desc: "Перезапустить микросервис. Пример: task app:restart -- accounts-service"
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} restart {{.CLI_ARGS}}"
+
+  app:logs:
+    desc: "Логи одного микросервиса. Пример: task app:logs -- accounts-service"
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} logs -f {{.CLI_ARGS}}"
+
+  # ─────────────────────────────────────────────
+  # ACCOUNTS SERVICE
+  # ─────────────────────────────────────────────
+  accounts:up:
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} up -d --build accounts-service"
+  accounts:start:
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} start accounts-service"
+  accounts:stop:
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} stop accounts-service"
+  accounts:restart:
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} restart accounts-service"
+  accounts:logs:
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} logs -f accounts-service"
+
+  # ─────────────────────────────────────────────
+  # TRANSACTION SERVICE
+  # ─────────────────────────────────────────────
+  transactions:up:
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} up -d --build transaction-service"
+  transactions:start:
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} start transaction-service"
+  transactions:stop:
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} stop transaction-service"
+  transactions:restart:
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} restart transaction-service"
+  transactions:logs:
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} logs -f transaction-service"
+
+  # ─────────────────────────────────────────────
+  # NOTIFICATION SERVICE
+  # ─────────────────────────────────────────────
+  notifications:up:
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} up -d --build notification-service"
+  notifications:start:
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} start notification-service"
+  notifications:stop:
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} stop notification-service"
+  notifications:restart:
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} restart notification-service"
+  notifications:logs:
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}} -f {{.APPS_COMPOSE}} logs -f notification-service"
+
+  # ─────────────────────────────────────────────
+  # ЛОКАЛЬНЫЙ ЗАПУСК (Development)
+  # ─────────────────────────────────────────────
+  run:accounts:
+    desc: Запустить accounts-service локально
+    cmds:
+      - go run apps/accounts-service/cmd/api/main.go
+
+  run:transactions:
+    desc: Запустить transaction-service локально
+    cmds:
+      - go run apps/transaction-service/cmd/api/main.go
+
+  run:notifications:
+    desc: Запустить notification-service локально
+    cmds:
+      - go run apps/notification-service/cmd/api/main.go
+
+  # ─────────────────────────────────────────────
+  # ВСЁ ВМЕСТЕ
+  # ─────────────────────────────────────────────
+  up:
+    desc: Поднять всё (infra + zitadel + migrations + apps)
+    cmds:
+      - task: infra:up
+      - task: zitadel:up
+      - cmd: echo "Waiting for infra to be ready..."
+      - cmd: sleep 10
+      - task: migrate:all
+      - task: apps:up
+      - cmd: echo "Yarmaq is up and running!"
+
+  down:
+    desc: Остановить всё (сохранить данные)
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}}    -f {{.APPS_COMPOSE}}    down"
+      - "{{.DC}} -p {{.INFRA_PROJECT}}  -f {{.DB_COMPOSE}}      down"
+      - "{{.DC}} -p {{.ZITADEL_PROJECT}} -f {{.ZITADEL_COMPOSE}} down"
+
+  down-v:
+    desc: Остановить всё и УДАЛИТЬ данные (volumes)
+    cmds:
+      - "{{.DC}} -p {{.APP_PROJECT}}    -f {{.APPS_COMPOSE}}    down -v"
+      - "{{.DC}} -p {{.INFRA_PROJECT}}  -f {{.DB_COMPOSE}}      down -v"
+      - "{{.DC}} -p {{.ZITADEL_PROJECT}} -f {{.ZITADEL_COMPOSE}} down -v"

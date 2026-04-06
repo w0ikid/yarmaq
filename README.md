@@ -44,6 +44,7 @@ Consumer "transaction.created"
 See [docs/Quickstart.md](docs/Quickstart.md).
 
 All available commands are in the `Makefile`.
+If you prefer [Task](https://taskfile.dev), a `Taskfile.yml` is also available.
 
 ## Local Services
 
