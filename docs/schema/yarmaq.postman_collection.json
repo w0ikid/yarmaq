@@ -20,7 +20,7 @@
                   "oauth2": [
                     {
                       "key": "clientId",
-                      "value": "364774513461755908",
+                      "value": "{{CLIENT_ID}}",
                       "type": "string"
                     },
                     {
@@ -68,19 +68,94 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{ACCOUNTS_URL}}api/v1/accounts/by-user?user_id=365106625431732228",
+                  "raw": "{{ACCOUNTS_URL_DEV}}/by-user?user_id=367395892761722884",
                   "host": [
-                    "{{ACCOUNTS_URL}}api"
+                    "{{ACCOUNTS_URL_DEV}}"
                   ],
                   "path": [
-                    "v1",
-                    "accounts",
                     "by-user"
                   ],
                   "query": [
                     {
                       "key": "user_id",
-                      "value": "365106625431732228",
+                      "value": "367395892761722884"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "get by user currency",
+              "request": {
+                "auth": {
+                  "type": "oauth2",
+                  "oauth2": [
+                    {
+                      "key": "clientId",
+                      "value": "{{CLIENT_ID}}",
+                      "type": "string"
+                    },
+                    {
+                      "key": "tokenName",
+                      "value": "bfasdf",
+                      "type": "string"
+                    },
+                    {
+                      "key": "accessTokenUrl",
+                      "value": "http://zitadel.localhost:8080/oauth/v2/token",
+                      "type": "string"
+                    },
+                    {
+                      "key": "authUrl",
+                      "value": "http://zitadel.localhost:8080/oauth/v2/authorize",
+                      "type": "string"
+                    },
+                    {
+                      "key": "redirect_uri",
+                      "value": "https://oauth.pstmn.io/v1/callback",
+                      "type": "string"
+                    },
+                    {
+                      "key": "useBrowser",
+                      "value": false,
+                      "type": "boolean"
+                    },
+                    {
+                      "key": "scope",
+                      "value": "openid profile email",
+                      "type": "string"
+                    },
+                    {
+                      "key": "grant_type",
+                      "value": "authorization_code_with_pkce",
+                      "type": "string"
+                    },
+                    {
+                      "key": "addTokenTo",
+                      "value": "header",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{ACCOUNTS_URL_DEV}}/by-user-currency?user_id=367395892761722884&currency=KZT",
+                  "host": [
+                    "{{ACCOUNTS_URL_DEV}}"
+                  ],
+                  "path": [
+                    "by-user-currency"
+                  ],
+                  "query": [
+                    {
+                      "key": "user_id",
+                      "value": "367395892761722884"
+                    },
+                    {
+                      "key": "currency",
+                      "value": "KZT",
                       "type": "text"
                     }
                   ]
@@ -97,13 +172,13 @@
               "type": "oauth2",
               "oauth2": [
                 {
-                  "key": "tokenName",
-                  "value": "timauserfirst",
+                  "key": "clientId",
+                  "value": "{{CLIENT_ID}}",
                   "type": "string"
                 },
                 {
-                  "key": "clientId",
-                  "value": "364774513461755908",
+                  "key": "tokenName",
+                  "value": "timauserfirst",
                   "type": "string"
                 },
                 {
@@ -164,83 +239,6 @@
           "response": []
         },
         {
-          "name": "update account balance",
-          "request": {
-            "method": "GET",
-            "header": []
-          },
-          "response": []
-        },
-        {
-          "name": "get account",
-          "request": {
-            "auth": {
-              "type": "oauth2",
-              "oauth2": [
-                {
-                  "key": "clientId",
-                  "value": "364774513461755908",
-                  "type": "string"
-                },
-                {
-                  "key": "tokenName",
-                  "value": "bfasdf",
-                  "type": "string"
-                },
-                {
-                  "key": "accessTokenUrl",
-                  "value": "http://zitadel.localhost:8080/oauth/v2/token",
-                  "type": "string"
-                },
-                {
-                  "key": "authUrl",
-                  "value": "http://zitadel.localhost:8080/oauth/v2/authorize",
-                  "type": "string"
-                },
-                {
-                  "key": "redirect_uri",
-                  "value": "https://oauth.pstmn.io/v1/callback",
-                  "type": "string"
-                },
-                {
-                  "key": "useBrowser",
-                  "value": false,
-                  "type": "boolean"
-                },
-                {
-                  "key": "scope",
-                  "value": "openid profile email",
-                  "type": "string"
-                },
-                {
-                  "key": "grant_type",
-                  "value": "authorization_code_with_pkce",
-                  "type": "string"
-                },
-                {
-                  "key": "addTokenTo",
-                  "value": "header",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{ACCOUNTS_URL}}api/v1/accounts/6919b3a0-8f31-4bfe-b229-0de530d196b9",
-              "host": [
-                "{{ACCOUNTS_URL}}api"
-              ],
-              "path": [
-                "v1",
-                "accounts",
-                "6919b3a0-8f31-4bfe-b229-0de530d196b9"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
           "name": "gey my accounts",
           "request": {
             "auth": {
@@ -248,7 +246,7 @@
               "oauth2": [
                 {
                   "key": "clientId",
-                  "value": "364774513461755908",
+                  "value": "{{CLIENT_ID}}",
                   "type": "string"
                 },
                 {
@@ -296,13 +294,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{ACCOUNTS_URL}}api/v1/accounts/me",
+              "raw": "{{ACCOUNTS_URL_DEV}}/me",
               "host": [
-                "{{ACCOUNTS_URL}}api"
+                "{{ACCOUNTS_URL_DEV}}"
               ],
               "path": [
-                "v1",
-                "accounts",
                 "me"
               ]
             }
@@ -315,100 +311,19 @@
       "name": "transactions",
       "item": [
         {
-          "name": "post transaction",
-          "request": {
-            "auth": {
-              "type": "oauth2",
-              "oauth2": [
-                {
-                  "key": "tokenName",
-                  "value": "sometestusername",
-                  "type": "string"
-                },
-                {
-                  "key": "clientId",
-                  "value": "364774513461755908",
-                  "type": "string"
-                },
-                {
-                  "key": "accessTokenUrl",
-                  "value": "http://zitadel.localhost:8080/oauth/v2/token",
-                  "type": "string"
-                },
-                {
-                  "key": "authUrl",
-                  "value": "http://zitadel.localhost:8080/oauth/v2/authorize",
-                  "type": "string"
-                },
-                {
-                  "key": "redirect_uri",
-                  "value": "https://oauth.pstmn.io/v1/callback",
-                  "type": "string"
-                },
-                {
-                  "key": "useBrowser",
-                  "value": false,
-                  "type": "boolean"
-                },
-                {
-                  "key": "scope",
-                  "value": "openid profile email",
-                  "type": "string"
-                },
-                {
-                  "key": "grant_type",
-                  "value": "authorization_code_with_pkce",
-                  "type": "string"
-                },
-                {
-                  "key": "addTokenTo",
-                  "value": "header",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"type\": \"TRANSFER\",\r\n    \"to_account_number\": \"KZ450200100000001\",\r\n    \"amount\": 5000,\r\n    \"currency\": \"KZT\",\r\n    \"idempotency_key\": \"{{$guid}}\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:8082/api/v1/transactions/",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8082",
-              "path": [
-                "api",
-                "v1",
-                "transactions",
-                ""
-              ]
-            }
-          },
-          "response": []
-        },
-        {
           "name": "deposit",
           "request": {
             "auth": {
               "type": "oauth2",
               "oauth2": [
                 {
-                  "key": "tokenName",
-                  "value": "ostotester",
+                  "key": "clientId",
+                  "value": "{{CLIENT_ID}}",
                   "type": "string"
                 },
                 {
-                  "key": "clientId",
-                  "value": "364774513461755908",
+                  "key": "tokenName",
+                  "value": "ostotester",
                   "type": "string"
                 },
                 {
@@ -478,13 +393,13 @@
               "type": "oauth2",
               "oauth2": [
                 {
-                  "key": "tokenName",
-                  "value": "ostotester",
+                  "key": "clientId",
+                  "value": "{{CLIENT_ID}}",
                   "type": "string"
                 },
                 {
-                  "key": "clientId",
-                  "value": "364774513461755908",
+                  "key": "tokenName",
+                  "value": "ostotester",
                   "type": "string"
                 },
                 {
@@ -528,7 +443,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"to_account_number\": \"KZ660200100000011\",\r\n    \"amount\": 500,\r\n    \"currency\": \"KZT\",\r\n    \"idempotency_key\": \"{{$guid}}\"\r\n}",
+              "raw": "{\r\n    \"to_account_number\": \"KZ610200100000004\",\r\n    \"amount\": 500,\r\n    \"currency\": \"KZT\",\r\n    \"idempotency_key\": \"{{$guid}}\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -554,13 +469,13 @@
               "type": "oauth2",
               "oauth2": [
                 {
-                  "key": "tokenName",
-                  "value": "legendatwo",
+                  "key": "clientId",
+                  "value": "{{CLIENT_ID}}",
                   "type": "string"
                 },
                 {
-                  "key": "clientId",
-                  "value": "364774513461755908",
+                  "key": "tokenName",
+                  "value": "legendatwo",
                   "type": "string"
                 },
                 {
@@ -635,6 +550,21 @@
     "type": "oauth2",
     "oauth2": [
       {
+        "key": "useBrowser",
+        "value": false,
+        "type": "boolean"
+      },
+      {
+        "key": "clientId",
+        "value": "{{CLIENT_ID}}",
+        "type": "string"
+      },
+      {
+        "key": "tokenName",
+        "value": "firstuser",
+        "type": "string"
+      },
+      {
         "key": "refreshRequestParams",
         "value": [],
         "type": "any"
@@ -648,11 +578,6 @@
         "key": "authRequestParams",
         "value": [],
         "type": "any"
-      },
-      {
-        "key": "tokenName",
-        "value": "newuseraccounts",
-        "type": "string"
       },
       {
         "key": "challengeAlgorithm",
@@ -672,11 +597,6 @@
       {
         "key": "grant_type",
         "value": "authorization_code_with_pkce",
-        "type": "string"
-      },
-      {
-        "key": "clientId",
-        "value": "364528202355376132",
         "type": "string"
       },
       {
@@ -755,6 +675,10 @@
     },
     {
       "key": "environment",
+      "value": ""
+    },
+    {
+      "key": "CLIENT_ID",
       "value": ""
     }
   ]

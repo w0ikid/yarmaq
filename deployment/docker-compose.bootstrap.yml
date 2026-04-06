@@ -14,7 +14,7 @@ services:
       ZITADEL_HOST: zitadel.localhost:8080
       PAT_FILE: /zitadel/bootstrap/login-client.pat
       SECRETS_DIR: /secrets
-      WEBHOOK_URL: http://yarmaq-accounts-service:8081/api/v1/webhooks/zitadel
+      WEBHOOK_URL: http://yarmaq-accounts-service:8081/api/v1/webhook/sync
     networks:
       - zitadel
 
@@ -26,3 +26,5 @@ volumes:
 networks:
   zitadel:
     external: true
+    name: zitadel
+

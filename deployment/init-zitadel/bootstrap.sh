@@ -10,9 +10,9 @@ PAT_FILE="${PAT_FILE:-/zitadel/bootstrap/login-client.pat}"
 SECRETS_DIR="${SECRETS_DIR:-/secrets}"
 
 PROJECT_NAME="yarmaq"
-WEBHOOK_URL="${WEBHOOK_URL:-http://yarmaq-accounts-service:8081/api/v1/webhooks/zitadel}"
+WEBHOOK_URL="${WEBHOOK_URL:-http://yarmaq-accounts-service:8081/api/v1/webhook/sync}"
 
-ROLES="user admin"
+ROLES="support admin"
 
 # username_в_zitadel:имя_файла_в_secrets
 SERVICE_USERS="accounts-service:accounts transaction-service:transaction notification-service:notification"
@@ -28,7 +28,7 @@ fail() { echo "[bootstrap] ✗ $*" >&2; exit 1; }
 zapi() {
   METHOD="$1"; shift
   ZPATH="$1"; shift
-  curl -sf \
+  curl -s \
     -X "$METHOD" \
     -H "Host: $ZITADEL_HOST" \
     -H "Authorization: Bearer $PAT" \
@@ -36,7 +36,6 @@ zapi() {
     "$ZITADEL_INTERNAL_URL$ZPATH" \
     "$@"
 }
-
 # ─────────────────────────────────────────────
 # WAIT FOR PAT FILE
 # ─────────────────────────────────────────────
@@ -152,25 +151,40 @@ for ENTRY in $SERVICE_USERS; do
 done
 
 # ─────────────────────────────────────────────
-# WEBHOOK ACTION
+# WEBHOOK TARGET
 # ─────────────────────────────────────────────
-log "checking webhook action..."
+log "checking webhook target..."
 
-ACTIONS_RESP=$(zapi GET "/management/v1/actions?query.limit=100")
-ACTION_EXISTS=$(echo "$ACTIONS_RESP" | grep -c '"name":"yarmaq-webhook"' || true)
+TARGET_ID=""
 
-if [ "$ACTION_EXISTS" -gt 0 ]; then
-  skip "webhook action already exists"
+TARGET_CREATE_RESP=$(zapi POST "/v2/actions/targets" \
+  -d "{\"name\":\"yarmaq-webhook\",\"restWebhook\":{\"interruptOnError\":false},\"endpoint\":\"$WEBHOOK_URL\",\"timeout\":\"10s\"}")
+
+TARGET_ID=$(echo "$TARGET_CREATE_RESP" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+if [ -n "$TARGET_ID" ]; then
+  ok "webhook target created (id=$TARGET_ID)"
 else
-  log "creating webhook action..."
-
-  ACTION_SCRIPT='function postUserCreated(ctx, api) { var resp = http.fetch(env.WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "user.created", userId: ctx.v1.user.id, orgId: ctx.v1.org.id }) }); }'
-
-  zapi POST "/management/v1/actions" \
-    -d "{\"name\":\"yarmaq-webhook\",\"script\":\"$ACTION_SCRIPT\",\"timeout\":\"10s\",\"allowedToFail\":true}" > /dev/null
-
-  ok "webhook action created"
+  skip "webhook target already exists or failed to create, trying to find id..."
+  # fallback: достать из UI невозможно через API, поэтому падаем
+  fail "could not get target id — delete existing target manually and re-run"
 fi
+
+# ─────────────────────────────────────────────
+# WEBHOOK EXECUTION
+# ─────────────────────────────────────────────
+log "setting execution for AddHumanUser response -> target $TARGET_ID..."
+zapi POST "/zitadel.action.v2.ActionService/SetExecution" \
+  -d "{
+    \"condition\": {
+      \"response\": {
+        \"method\": \"/zitadel.user.v2.UserService/AddHumanUser\"
+      }
+    },
+    \"targets\": [\"$TARGET_ID\"]
+  }" > /dev/null
+
+ok "execution set"
 
 # ─────────────────────────────────────────────
 # DONE

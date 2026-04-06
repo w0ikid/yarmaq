@@ -83,6 +83,9 @@ zitadel-up:
 	$(DOCKER_COMPOSE) -p $(ZITADEL_PROJECT) -f $(ZITADEL_COMPOSE) up -d --wait
 
 zitadel-down:
+	$(DOCKER_COMPOSE) -p $(ZITADEL_PROJECT) -f $(ZITADEL_COMPOSE) down
+
+zitadel-down-volumes:
 	$(DOCKER_COMPOSE) -p $(ZITADEL_PROJECT) -f $(ZITADEL_COMPOSE) down -v
 
 zitadel-bootstrap:
