@@ -44,6 +44,38 @@ func (c *Client) GetAccount(ctx context.Context, id string) (*models.AccountResp
 	return &account, nil
 }
 
+func (c *Client) GetAccountByNumber(ctx context.Context, number string) (*models.AccountResponse, error) {
+	query := url.Values{}
+	query.Set("number", number)
+
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"GET",
+		fmt.Sprintf("%s/api/v1/internal/accounts/by-number?%s", c.base.BaseURL, query.Encode()),
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.base.Do(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("accounts-service returned %d", resp.StatusCode)
+	}
+
+	var account models.AccountResponse
+	if err := json.NewDecoder(resp.Body).Decode(&account); err != nil {
+		return nil, err
+	}
+
+	return &account, nil
+}
+
 func (c *Client) GetAccountByNumberAndCurrency(ctx context.Context, number string, currency string) (*models.AccountResponse, error) {
 	query := url.Values{}
 	query.Set("number", number)

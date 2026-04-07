@@ -24,5 +24,6 @@ func (r *Router) SetupRoutes() {
 	r.router.Post("/transfer", r.handler.CreateTransfer)
 	r.router.Post("/deposit", r.handler.CreateDeposit)
 	r.router.Post("/withdraw", r.handler.CreateWithdraw)
+	r.router.Post("/exchange", r.handler.CreateExchange)
 	r.router.Get("/:id", r.handler.GetTransaction)
 }

@@ -50,6 +50,9 @@ func (uc *CreateTransactionUsecase) Execute(ctx context.Context, transaction mod
 		ToAccountID:   created.ToAccountID.String(),
 		Amount:        created.Amount,
 		Currency:      created.Currency,
+		TargetAmount:   *created.TargetAmount,
+		TargetCurrency: *created.TargetCurrency,
+		ExchangeRate:   *created.ExchangeRate,
 	})
 	if err != nil {
 		uc.Logger.Errorw("failed to marshal transaction created event", "error", err)

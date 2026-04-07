@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/w0ikid/yarmaq/pkg/ctxkeys"
 	"github.com/w0ikid/yarmaq/pkg/errs"
+	"github.com/w0ikid/yarmaq/pkg/exchange"
 	"github.com/w0ikid/yarmaq/pkg/httpclient/accounts"
 	"github.com/w0ikid/yarmaq/pkg/models"
 	"go.uber.org/zap"
@@ -21,13 +22,15 @@ type Service interface {
 type implementation struct {
 	repo           TransactionRepo
 	accountsClient *accounts.Client
+	exchange       exchange.Service
 	logger         *zap.SugaredLogger
 }
 
-func NewService(repo TransactionRepo, accountsClient *accounts.Client, logger *zap.SugaredLogger) Service {
+func NewService(repo TransactionRepo, accountsClient *accounts.Client, exchangeSvc exchange.Service, logger *zap.SugaredLogger) Service {
 	return &implementation{
 		repo:           repo,
 		accountsClient: accountsClient,
+		exchange:       exchangeSvc,
 		logger:         logger.Named("transaction_service"),
 	}
 }
@@ -68,12 +71,12 @@ func (s *implementation) Create(ctx context.Context, transaction models.Transact
 			return nil, fmt.Errorf("%w: from_account not found for user %s and currency %s", errs.ErrNotFound, userID, transaction.Currency)
 		}
 
-		toAccount, err = s.accountsClient.GetAccountByNumberAndCurrency(ctx, transaction.ToAccountNumber, transaction.Currency)
+		toAccount, err = s.accountsClient.GetAccountByNumber(ctx, transaction.ToAccountNumber)
 		if err != nil {
 			return nil, fmt.Errorf("get to_account: %w", err)
 		}
 		if toAccount == nil {
-			return nil, fmt.Errorf("%w: to_account not found for number %s and currency %s", errs.ErrNotFound, transaction.ToAccountNumber, transaction.Currency)
+			return nil, fmt.Errorf("%w: to_account not found for number %s", errs.ErrNotFound, transaction.ToAccountNumber)
 		}
 		if toAccount.UserID == userID {
 			return nil, fmt.Errorf("%w: cannot transfer to your own account", errs.ErrValidation)
@@ -110,6 +113,26 @@ func (s *implementation) Create(ctx context.Context, transaction models.Transact
 		if toAccount == nil {
 			return nil, fmt.Errorf("%w: system account not found for currency %s", errs.ErrNotFound, transaction.Currency)
 		}
+	case models.TransactionTypeExchange:
+		if transaction.TargetCurrency == nil {
+			return nil, fmt.Errorf("%w: target_currency is required", errs.ErrValidation)
+		}
+
+		fromAccount, err = s.accountsClient.GetAccountByUserIDAndCurrency(ctx, userID, transaction.Currency)
+		if err != nil {
+			return nil, fmt.Errorf("get from_account: %w", err)
+		}
+		if fromAccount == nil {
+			return nil, fmt.Errorf("%w: from_account not found for user %s and currency %s", errs.ErrNotFound, userID, transaction.Currency)
+		}
+
+		toAccount, err = s.accountsClient.GetAccountByUserIDAndCurrency(ctx, userID, *transaction.TargetCurrency)
+		if err != nil {
+			return nil, fmt.Errorf("get to_account: %w", err)
+		}
+		if toAccount == nil {
+			return nil, fmt.Errorf("%w: to_account (currency: %s) not found for user %s", errs.ErrNotFound, *transaction.TargetCurrency, userID)
+		}
 	}
 
 	transaction.FromAccountID = fromAccount.ID
@@ -119,11 +142,19 @@ func (s *implementation) Create(ctx context.Context, transaction models.Transact
 		return nil, fmt.Errorf("%w: from and to accounts cannot be the same", errs.ErrValidation)
 	}
 
-	if fromAccount.Currency != transaction.Currency || toAccount.Currency != transaction.Currency {
-		return nil, fmt.Errorf("%w: accounts have different currencies: %s vs %s", errs.ErrValidation, fromAccount.Currency, toAccount.Currency)
+	// Calculate target amount and exchange rate
+	targetAmount, rate, err := s.exchange.Convert(transaction.Amount, fromAccount.Currency, toAccount.Currency)
+	if err != nil {
+		return nil, fmt.Errorf("exchange conversion failed: %w", err)
 	}
 
-	transaction.Currency = fromAccount.Currency
+	if transaction.Amount > 0 && targetAmount == 0 {
+		return nil, fmt.Errorf("%w: amount is too small for conversion from %s to %s", errs.ErrValidation, fromAccount.Currency, toAccount.Currency)
+	}
+
+	transaction.TargetAmount = &targetAmount
+	transaction.TargetCurrency = &toAccount.Currency
+	transaction.ExchangeRate = &rate
 	transaction.Status = models.TransactionStatusPending
 
 	if transaction.IdempotencyKey != "" {

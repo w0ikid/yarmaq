@@ -79,7 +79,7 @@ func (uc *ProcessTransactionSagaUsecase) Execute(ctx context.Context, event mode
 
 	uc.TransactionService.UpdateStatus(ctx, txID, models.TransactionStatusDepositing)
 
-	err = uc.AccountService.Deposit(ctx, event.ToAccountID, txID, event.Amount)
+	err = uc.AccountService.Deposit(ctx, event.ToAccountID, txID, event.TargetAmount)
 	if err != nil {
 		errStr := err.Error()
 		if err := uc.SagaService.UpdateStepStatus(ctx, depositStep.ID, models.SagaStatusFailed, &errStr); err != nil {

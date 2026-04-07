@@ -18,11 +18,12 @@ const (
 	TransactionTypeTransfer   = "TRANSFER"
 	TransactionTypeDeposit    = "DEPOSIT"
 	TransactionTypeWithdrawal = "WITHDRAWAL"
+	TransactionTypeExchange   = "EXCHANGE"
 )
 
 func IsValidTransactionType(transactionType string) bool {
 	switch transactionType {
-	case TransactionTypeTransfer, TransactionTypeDeposit, TransactionTypeWithdrawal:
+	case TransactionTypeTransfer, TransactionTypeDeposit, TransactionTypeWithdrawal, TransactionTypeExchange:
 		return true
 	default:
 		return false
@@ -37,6 +38,9 @@ type Transaction struct {
 	ToAccountNumber string     `json:"to_account_number,omitempty"`
 	Amount          int64      `json:"amount"`
 	Currency        string     `json:"currency"`
+	TargetAmount    *int64     `json:"target_amount,omitempty"`
+	TargetCurrency  *string    `json:"target_currency,omitempty"`
+	ExchangeRate    *float64   `json:"exchange_rate,omitempty"`
 	Status          string     `json:"status"`
 	IdempotencyKey  string     `json:"idempotency_key,omitempty"`
 	CreatedAt       time.Time  `json:"created_at"`
@@ -48,8 +52,11 @@ type TransactionCreatedEvent struct {
 	Type          string `json:"type"` // TRANSFER, DEPOSIT, WITHDRAWAL
 	FromAccountID string `json:"from_account_id"`
 	ToAccountID   string `json:"to_account_id"`
-	Amount        int64  `json:"amount"`
-	Currency      string `json:"currency"`
+	Amount         int64   `json:"amount"`
+	Currency       string  `json:"currency"`
+	TargetAmount   int64   `json:"target_amount"`
+	TargetCurrency string  `json:"target_currency"`
+	ExchangeRate   float64 `json:"exchange_rate"`
 }
 
 type TransactionStatusChangedEvent struct {

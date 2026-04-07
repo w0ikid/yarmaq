@@ -29,6 +29,13 @@ type WithdrawRequest struct {
 	IdempotencyKey string `json:"idempotency_key"`
 }
 
+type ExchangeRequest struct {
+	Amount         int64  `json:"amount"`
+	FromCurrency   string `json:"from_currency"`
+	ToCurrency     string `json:"to_currency"`
+	IdempotencyKey string `json:"idempotency_key"`
+}
+
 type TransactionResponse struct {
 	ID             uuid.UUID `json:"id"`
 	Type           string    `json:"type"`

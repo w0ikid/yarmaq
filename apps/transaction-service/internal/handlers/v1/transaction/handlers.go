@@ -19,6 +19,7 @@ type Handler interface {
 	CreateTransfer(c *fiber.Ctx) error
 	CreateDeposit(c *fiber.Ctx) error
 	CreateWithdraw(c *fiber.Ctx) error
+	CreateExchange(c *fiber.Ctx) error
 	GetTransaction(c *fiber.Ctx) error
 }
 
@@ -89,6 +90,22 @@ func (h *handler) CreateWithdraw(c *fiber.Ctx) error {
 		Amount:         req.Amount,
 		Currency:       req.Currency,
 		IdempotencyKey: req.IdempotencyKey,
+	})
+}
+
+func (h *handler) CreateExchange(c *fiber.Ctx) error {
+	var req ExchangeRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	targetCurrency := req.ToCurrency
+	return h.createTransaction(c, models.Transaction{
+		Type:           models.TransactionTypeExchange,
+		Amount:         req.Amount,
+		Currency:       req.FromCurrency,
+		TargetCurrency: &targetCurrency,
+		IdempotencyKey:  req.IdempotencyKey,
 	})
 }
 

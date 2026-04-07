@@ -57,13 +57,17 @@ func (h *handler) UpdateBalance(c *fiber.Ctx) error {
 func (h *handler) GetAccountByNumberAndCurrency(c *fiber.Ctx) error {
 	number := c.Query("number")
 	currency := c.Query("currency")
-	if number == "" || currency == "" {
-		return c.Status(400).JSON(fiber.Map{"error": "number and currency are required"})
+	if number == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "number is required"})
 	}
 
-	acc, err := h.domain.GetAccountUsecase.ExecuteByNumberAndCurrency(c.Context(), number, currency)
+	var acc *models.Account
+	var err error
+
+	acc, err = h.domain.GetAccountUsecase.ExecuteByNumber(c.Context(), number)
+
 	if err != nil {
-		h.logger.Errorw("failed to get account by number and currency", "number", number, "currency", currency, "error", err)
+		h.logger.Errorw("failed to get account by number", "number", number, "currency", currency, "error", err)
 		return errs.HandleHTTP(c, err)
 	}
 	if acc == nil {
