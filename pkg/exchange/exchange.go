@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/w0ikid/yarmaq/pkg/errs"
+	"github.com/w0ikid/yarmaq/pkg/core/errs"
 )
 
 // Service handles currency conversions with KZT as the anchor currency.

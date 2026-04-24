@@ -9,10 +9,10 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"go.uber.org/zap"
 
-	"github.com/w0ikid/yarmaq/pkg/config"
-	"github.com/w0ikid/yarmaq/pkg/constants"
-	"github.com/w0ikid/yarmaq/pkg/jwks"
-	"github.com/w0ikid/yarmaq/pkg/zitadel"
+	"github.com/w0ikid/yarmaq/pkg/auth/jwks"
+	"github.com/w0ikid/yarmaq/pkg/clients/zitadel"
+	"github.com/w0ikid/yarmaq/pkg/core/config"
+	"github.com/w0ikid/yarmaq/pkg/core/constants"
 
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/repo"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/repo/igorm"
@@ -24,8 +24,8 @@ import (
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/ledger"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/webhook"
 
-	kafkamodule "github.com/w0ikid/yarmaq/pkg/kafka_module"
-	"github.com/w0ikid/yarmaq/pkg/middleware"
+	"github.com/w0ikid/yarmaq/pkg/auth/middleware"
+	kafkamodule "github.com/w0ikid/yarmaq/pkg/clients/kafka_module"
 	"github.com/w0ikid/yarmaq/pkg/outbox_worker"
 
 	"net"
@@ -36,14 +36,14 @@ import (
 )
 
 type App struct {
-	fapp      *fiber.App
+	fapp       *fiber.App
 	grpcServer *grpc.Server
-	addr      string
-	grpcAddr  string
-	container *container.Container
-	logger    *zap.SugaredLogger
-	pg        *repo.Postgres
-	cancel    context.CancelFunc
+	addr       string
+	grpcAddr   string
+	container  *container.Container
+	logger     *zap.SugaredLogger
+	pg         *repo.Postgres
+	cancel     context.CancelFunc
 
 	kafkaPublisher *kafkamodule.Publisher
 	outboxWorker   *outbox_worker.Worker
@@ -98,7 +98,7 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 
 	// kafka consumers
 	// consumers := []*kafkamodule.Consumer{
-		
+
 	// }
 	// Репозитории
 	repositories := igorm.NewGormRepository(pg.DB(), appLogger)
@@ -139,8 +139,6 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 		},
 	}))
 
-	
-
 	// Fiber router
 	router := handlers.NewRouter(fapp, h)
 	router.SetupRoutes(appLogger)
@@ -164,9 +162,9 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 		addr:       ":" + cfg.HTTP.Port,
 		grpcAddr:   ":" + cfg.GRPC.Port,
 		container:  cont,
-		logger:    appLogger,
-		pg:        pg,
-		cancel:    cancel,
+		logger:     appLogger,
+		pg:         pg,
+		cancel:     cancel,
 
 		kafkaPublisher: kafkaPublisher,
 		outboxWorker:   outboxWorker,

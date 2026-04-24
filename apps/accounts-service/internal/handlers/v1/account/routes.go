@@ -2,7 +2,7 @@ package account
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/w0ikid/yarmaq/pkg/middleware"
+	"github.com/w0ikid/yarmaq/pkg/auth/middleware"
 	"github.com/w0ikid/yarmaq/pkg/models"
 )
 

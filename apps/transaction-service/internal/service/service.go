@@ -6,9 +6,9 @@ import (
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/service/outbox"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/service/saga"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/service/transaction"
+	"github.com/w0ikid/yarmaq/pkg/clients/zitadel"
 	"github.com/w0ikid/yarmaq/pkg/exchange"
 	accountsv1 "github.com/w0ikid/yarmaq/pkg/gen/accounts/v1"
-	"github.com/w0ikid/yarmaq/pkg/zitadel"
 	"go.uber.org/zap"
 )
 

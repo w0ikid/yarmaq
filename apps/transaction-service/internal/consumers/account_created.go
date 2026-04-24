@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/segmentio/kafka-go"
-	"github.com/w0ikid/yarmaq/pkg/ctxkeys"
+	"github.com/w0ikid/yarmaq/pkg/core/ctxkeys"
 	"github.com/w0ikid/yarmaq/pkg/models"
 	"go.uber.org/zap"
 )

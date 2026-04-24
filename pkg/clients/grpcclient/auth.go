@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/w0ikid/yarmaq/pkg/zitadel"
+	"github.com/w0ikid/yarmaq/pkg/clients/zitadel"
 )
 
 type zitadelCreds struct {

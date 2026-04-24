@@ -1,14 +1,14 @@
 package httpclient
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"net/http"
 	"log"
+	"net/http"
 	"time"
-	"bytes"
 
-	"github.com/w0ikid/yarmaq/pkg/zitadel"
+	"github.com/w0ikid/yarmaq/pkg/clients/zitadel"
 )
 
 type Client struct {

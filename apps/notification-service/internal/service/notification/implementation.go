@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/w0ikid/yarmaq/pkg/errs"
+	"github.com/w0ikid/yarmaq/pkg/clients/smtpclient"
+	"github.com/w0ikid/yarmaq/pkg/core/errs"
 	"github.com/w0ikid/yarmaq/pkg/models"
-	"github.com/w0ikid/yarmaq/pkg/smtpclient"
 	"go.uber.org/zap"
 )
 

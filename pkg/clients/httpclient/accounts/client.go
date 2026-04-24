@@ -9,7 +9,7 @@ import (
 	"net/url"
 
 	"github.com/google/uuid"
-	"github.com/w0ikid/yarmaq/pkg/httpclient"
+	"github.com/w0ikid/yarmaq/pkg/clients/httpclient"
 	"github.com/w0ikid/yarmaq/pkg/models"
 )
 

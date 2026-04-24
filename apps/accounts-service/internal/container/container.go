@@ -9,7 +9,7 @@ import (
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase/account"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase/ledger"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/usecase/outbox"
-	"github.com/w0ikid/yarmaq/pkg/zitadel"
+	"github.com/w0ikid/yarmaq/pkg/clients/zitadel"
 	"go.uber.org/zap"
 )
 

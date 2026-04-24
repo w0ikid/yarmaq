@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/w0ikid/yarmaq/pkg/ctxkeys"
-	"github.com/w0ikid/yarmaq/pkg/errs"
+	"github.com/w0ikid/yarmaq/pkg/core/ctxkeys"
+	"github.com/w0ikid/yarmaq/pkg/core/errs"
 	"github.com/w0ikid/yarmaq/pkg/exchange"
 	accountsv1 "github.com/w0ikid/yarmaq/pkg/gen/accounts/v1"
 	"github.com/w0ikid/yarmaq/pkg/models"

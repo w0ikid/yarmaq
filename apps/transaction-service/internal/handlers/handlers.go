@@ -3,7 +3,7 @@ package handlers
 import (
 	v1 "github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1/transaction"
-	"github.com/w0ikid/yarmaq/pkg/jwks"
+	"github.com/w0ikid/yarmaq/pkg/auth/jwks"
 )
 
 type Depedencies struct {

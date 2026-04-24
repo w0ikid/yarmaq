@@ -6,7 +6,7 @@ import (
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/service/ledger"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/service/outbox"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/service/users"
-	"github.com/w0ikid/yarmaq/pkg/zitadel"
+	"github.com/w0ikid/yarmaq/pkg/clients/zitadel"
 	"go.uber.org/zap"
 )
 
