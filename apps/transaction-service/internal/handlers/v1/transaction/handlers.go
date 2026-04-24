@@ -4,7 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase/transaction"
-	"github.com/w0ikid/yarmaq/pkg/errs"
+	"github.com/w0ikid/yarmaq/pkg/core/errs"
 	"github.com/w0ikid/yarmaq/pkg/models"
 	"go.uber.org/zap"
 )
@@ -105,7 +105,7 @@ func (h *handler) CreateExchange(c *fiber.Ctx) error {
 		Amount:         req.Amount,
 		Currency:       req.FromCurrency,
 		TargetCurrency: &targetCurrency,
-		IdempotencyKey:  req.IdempotencyKey,
+		IdempotencyKey: req.IdempotencyKey,
 	})
 }
 

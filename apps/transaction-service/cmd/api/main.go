@@ -8,10 +8,10 @@ import (
 	"syscall"
 	"time"
 
-	"go.uber.org/zap"
-	pkgLogger "github.com/w0ikid/yarmaq/pkg/logger"
-	"github.com/w0ikid/yarmaq/pkg/config"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal"
+	"github.com/w0ikid/yarmaq/pkg/core/config"
+	pkgLogger "github.com/w0ikid/yarmaq/pkg/core/logger"
+	"go.uber.org/zap"
 )
 
 func main() {

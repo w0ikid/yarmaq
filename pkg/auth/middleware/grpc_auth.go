@@ -3,8 +3,8 @@ package middleware
 import (
 	"context"
 
-	"github.com/w0ikid/yarmaq/pkg/ctxkeys"
-	"github.com/w0ikid/yarmaq/pkg/jwks"
+	"github.com/w0ikid/yarmaq/pkg/auth/jwks"
+	"github.com/w0ikid/yarmaq/pkg/core/ctxkeys"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -70,8 +70,8 @@ func GRPCServiceOnlyInterceptor(logger *zap.SugaredLogger, allowedServices ...st
 		}
 
 		if !allowed {
-			logger.Warnw("unauthorized gRPC service call", 
-				"client_id", clientID, 
+			logger.Warnw("unauthorized gRPC service call",
+				"client_id", clientID,
 				"method", info.FullMethod,
 			)
 			return nil, status.Errorf(codes.PermissionDenied, "service %s is not allowed to call this method", clientID)

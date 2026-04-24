@@ -3,8 +3,8 @@ package service
 import (
 	"github.com/w0ikid/yarmaq/apps/notification-service/internal/repo"
 	"github.com/w0ikid/yarmaq/apps/notification-service/internal/service/notification"
-	"github.com/w0ikid/yarmaq/pkg/smtpclient"
-	"github.com/w0ikid/yarmaq/pkg/zitadel"
+	"github.com/w0ikid/yarmaq/pkg/clients/smtpclient"
+	"github.com/w0ikid/yarmaq/pkg/clients/zitadel"
 	"go.uber.org/zap"
 )
 

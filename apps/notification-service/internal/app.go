@@ -9,18 +9,18 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"go.uber.org/zap"
 
-	"github.com/w0ikid/yarmaq/pkg/config"
-	"github.com/w0ikid/yarmaq/pkg/jwks"
-	"github.com/w0ikid/yarmaq/pkg/zitadel"
+	"github.com/w0ikid/yarmaq/pkg/auth/jwks"
+	"github.com/w0ikid/yarmaq/pkg/clients/zitadel"
+	"github.com/w0ikid/yarmaq/pkg/core/config"
 
 	"github.com/w0ikid/yarmaq/apps/notification-service/internal/repo"
 	"github.com/w0ikid/yarmaq/apps/notification-service/internal/repo/igorm"
 
 	"github.com/w0ikid/yarmaq/apps/notification-service/internal/consumers"
 	"github.com/w0ikid/yarmaq/apps/notification-service/internal/container"
-	"github.com/w0ikid/yarmaq/apps/notification-service/internal/handlers" 
-	kafkamodule "github.com/w0ikid/yarmaq/pkg/kafka_module"
-	"github.com/w0ikid/yarmaq/pkg/smtpclient"
+	"github.com/w0ikid/yarmaq/apps/notification-service/internal/handlers"
+	kafkamodule "github.com/w0ikid/yarmaq/pkg/clients/kafka_module"
+	"github.com/w0ikid/yarmaq/pkg/clients/smtpclient"
 )
 
 type App struct {
@@ -122,13 +122,13 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 	_, cancel := context.WithCancel(ctx)
 
 	return &App{
-		fapp:           fapp,
-		addr:           ":" + cfg.HTTP.Port,
-		container:      cont,
-		logger:         appLogger,
-		pg:             pg,
-		cancel:         cancel,
-		consumers:      appConsumers,
+		fapp:      fapp,
+		addr:      ":" + cfg.HTTP.Port,
+		container: cont,
+		logger:    appLogger,
+		pg:        pg,
+		cancel:    cancel,
+		consumers: appConsumers,
 	}, nil
 }
 

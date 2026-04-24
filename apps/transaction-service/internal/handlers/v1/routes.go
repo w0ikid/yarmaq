@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/w0ikid/yarmaq/pkg/middleware"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1/transaction"
+	"github.com/w0ikid/yarmaq/pkg/auth/middleware"
 	"go.uber.org/zap"
 )
 
@@ -32,7 +32,7 @@ func (r *Router) SetupRoutes(logger *zap.SugaredLogger) {
 	transactionRouter.Use(
 		middleware.AuthMiddleware(r.handler.JWKS),
 		middleware.UserContextMiddleware(),
-		middleware.RateLimiter(3, time.Second * 10),
+		middleware.RateLimiter(3, time.Second*10),
 	)
 	transaction.NewRouter(transactionRouter, r.handler.Transaction, r.handler.JWKS).SetupRoutes()
 }

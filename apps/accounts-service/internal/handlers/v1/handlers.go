@@ -5,7 +5,7 @@ import (
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/internals"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/ledger"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/webhook"
-	"github.com/w0ikid/yarmaq/pkg/jwks"
+	"github.com/w0ikid/yarmaq/pkg/auth/jwks"
 	"go.uber.org/zap"
 )
 
@@ -15,16 +15,16 @@ type Dependencies struct {
 	AccountDeps  account.HandlerDeps
 	InternalDeps internals.HandlerDeps
 	LedgerDeps   ledger.HandlerDeps
-	WebhookDeps webhook.HandlerDeps
-	JWKS        *jwks.JWKS
+	WebhookDeps  webhook.HandlerDeps
+	JWKS         *jwks.JWKS
 }
 
 type Handlers struct {
 	Account  account.Handler
 	Internal internals.Handler
 	Ledger   ledger.Handler
-	Webhook webhook.Handler
-	JWKS    *jwks.JWKS
+	Webhook  webhook.Handler
+	JWKS     *jwks.JWKS
 }
 
 func NewHandlers(deps Dependencies) *Handlers {

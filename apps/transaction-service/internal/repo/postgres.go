@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/w0ikid/yarmaq/pkg/config"
+	"github.com/w0ikid/yarmaq/pkg/core/config"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -18,7 +18,7 @@ type Postgres struct {
 
 func NewPostgres(ctx context.Context, cfg config.PostgresConfig, logger *zap.SugaredLogger) (*Postgres, error) {
 	sugar := logger.Named("postgres")
-	
+
 	sugar.Infof("connecting to postgres %s:%s/%s", cfg.Host, cfg.Port, cfg.DBName)
 	dsn := fmt.Sprintf("%s connect_timeout=5", cfg.DSN())
 

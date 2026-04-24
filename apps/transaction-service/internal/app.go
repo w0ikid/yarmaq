@@ -9,30 +9,30 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"go.uber.org/zap"
 
-	"github.com/w0ikid/yarmaq/pkg/config"
-	"github.com/w0ikid/yarmaq/pkg/jwks"
-	"github.com/w0ikid/yarmaq/pkg/zitadel"
+	"github.com/w0ikid/yarmaq/pkg/auth/jwks"
+	"github.com/w0ikid/yarmaq/pkg/clients/zitadel"
+	"github.com/w0ikid/yarmaq/pkg/core/config"
 
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/repo"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/repo/igorm"
 
+	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/consumers"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/container"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1/transaction"
-	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/consumers"
-	kafkamodule "github.com/w0ikid/yarmaq/pkg/kafka_module"
+	kafkamodule "github.com/w0ikid/yarmaq/pkg/clients/kafka_module"
 	"github.com/w0ikid/yarmaq/pkg/outbox_worker"
 
-	"google.golang.org/grpc"
-	"github.com/w0ikid/yarmaq/pkg/grpcclient"
+	"github.com/w0ikid/yarmaq/pkg/clients/grpcclient"
 	accountsv1 "github.com/w0ikid/yarmaq/pkg/gen/accounts/v1"
+	"google.golang.org/grpc"
 )
 
 type App struct {
-	fapp      *fiber.App
-	addr      string
-	container *container.Container
-	logger    *zap.SugaredLogger
+	fapp           *fiber.App
+	addr           string
+	container      *container.Container
+	logger         *zap.SugaredLogger
 	pg             *repo.Postgres
 	cancel         context.CancelFunc
 	grpcConn       *grpc.ClientConn

@@ -2,11 +2,11 @@ package handlers
 
 import (
 	v1 "github.com/w0ikid/yarmaq/apps/notification-service/internal/handlers/v1"
-	"github.com/w0ikid/yarmaq/pkg/jwks"
+	"github.com/w0ikid/yarmaq/pkg/auth/jwks"
 )
 
 type Depedencies struct {
-	JWKS            *jwks.JWKS
+	JWKS *jwks.JWKS
 }
 
 type Handlers struct {
@@ -17,7 +17,7 @@ type Handlers struct {
 func NewHandlers(deps Depedencies) *Handlers {
 	return &Handlers{
 		V1: v1.NewHandlers(v1.Dependencies{
-			JWKS:            deps.JWKS,
+			JWKS: deps.JWKS,
 		}),
 		JWKS: deps.JWKS,
 	}

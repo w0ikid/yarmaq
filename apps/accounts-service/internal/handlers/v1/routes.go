@@ -4,12 +4,12 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/w0ikid/yarmaq/pkg/middleware"
-	"github.com/w0ikid/yarmaq/pkg/constants"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/account"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/internals"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/ledger"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/webhook"
+	"github.com/w0ikid/yarmaq/pkg/auth/middleware"
+	"github.com/w0ikid/yarmaq/pkg/core/constants"
 	"go.uber.org/zap"
 )
 
