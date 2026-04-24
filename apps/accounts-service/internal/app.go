@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/w0ikid/yarmaq/pkg/config"
+	"github.com/w0ikid/yarmaq/pkg/constants"
 	"github.com/w0ikid/yarmaq/pkg/jwks"
 	"github.com/w0ikid/yarmaq/pkg/zitadel"
 
@@ -24,12 +25,14 @@ import (
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/webhook"
 
 	kafkamodule "github.com/w0ikid/yarmaq/pkg/kafka_module"
+	"github.com/w0ikid/yarmaq/pkg/middleware"
 	"github.com/w0ikid/yarmaq/pkg/outbox_worker"
 
-	accountsv1 "github.com/w0ikid/yarmaq/pkg/gen/accounts/v1"
-	grpc_v1 "github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/grpc/v1"
-	"google.golang.org/grpc"
 	"net"
+
+	grpc_v1 "github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/grpc/v1"
+	accountsv1 "github.com/w0ikid/yarmaq/pkg/gen/accounts/v1"
+	"google.golang.org/grpc"
 )
 
 type App struct {
@@ -143,7 +146,12 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 	router.SetupRoutes(appLogger)
 
 	// gRPC server
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			middleware.GRPCAuthInterceptor(jwksClient),
+			middleware.GRPCServiceOnlyInterceptor(appLogger, constants.TransactionService),
+		),
+	)
 	accountsGrpcHandler := grpc_v1.NewAccountsHandler(cont.AccountDomain, appLogger)
 	accountsv1.RegisterAccountsServiceServer(grpcServer, accountsGrpcHandler)
 

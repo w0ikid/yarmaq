@@ -8,7 +8,7 @@ import (
 	"github.com/w0ikid/yarmaq/pkg/ctxkeys"
 	"github.com/w0ikid/yarmaq/pkg/errs"
 	"github.com/w0ikid/yarmaq/pkg/exchange"
-	"github.com/w0ikid/yarmaq/pkg/httpclient/accounts"
+	accountsv1 "github.com/w0ikid/yarmaq/pkg/gen/accounts/v1"
 	"github.com/w0ikid/yarmaq/pkg/models"
 	"go.uber.org/zap"
 )
@@ -21,12 +21,12 @@ type Service interface {
 
 type implementation struct {
 	repo           TransactionRepo
-	accountsClient *accounts.Client
+	accountsClient accountsv1.AccountsServiceClient
 	exchange       exchange.Service
 	logger         *zap.SugaredLogger
 }
 
-func NewService(repo TransactionRepo, accountsClient *accounts.Client, exchangeSvc exchange.Service, logger *zap.SugaredLogger) Service {
+func NewService(repo TransactionRepo, accountsClient accountsv1.AccountsServiceClient, exchangeSvc exchange.Service, logger *zap.SugaredLogger) Service {
 	return &implementation{
 		repo:           repo,
 		accountsClient: accountsClient,
@@ -63,76 +63,82 @@ func (s *implementation) Create(ctx context.Context, transaction models.Transact
 			return nil, fmt.Errorf("%w: to_account_number is required", errs.ErrValidation)
 		}
 
-		fromAccount, err = s.accountsClient.GetAccountByUserIDAndCurrency(ctx, userID, transaction.Currency)
+		resp, err := s.accountsClient.GetAccountByUserIDAndCurrency(ctx, &accountsv1.GetAccountByUserIDAndCurrencyRequest{
+			UserId:   userID,
+			Currency: transaction.Currency,
+		})
 		if err != nil {
-			return nil, fmt.Errorf("get from_account: %w", err)
+			return nil, fmt.Errorf("get from_account (gRPC): %w", err)
 		}
-		if fromAccount == nil {
-			return nil, fmt.Errorf("%w: from_account not found for user %s and currency %s", errs.ErrNotFound, userID, transaction.Currency)
-		}
+		fromAccount = s.mapToModelResponse(resp)
 
-		toAccount, err = s.accountsClient.GetAccountByNumber(ctx, transaction.ToAccountNumber)
+		resp, err = s.accountsClient.GetAccountByNumber(ctx, &accountsv1.GetAccountByNumberRequest{
+			Number: transaction.ToAccountNumber,
+		})
 		if err != nil {
-			return nil, fmt.Errorf("get to_account: %w", err)
+			return nil, fmt.Errorf("get to_account (gRPC): %w", err)
 		}
-		if toAccount == nil {
-			return nil, fmt.Errorf("%w: to_account not found for number %s", errs.ErrNotFound, transaction.ToAccountNumber)
-		}
+		toAccount = s.mapToModelResponse(resp)
+
 		if toAccount.UserID == userID {
 			return nil, fmt.Errorf("%w: cannot transfer to your own account", errs.ErrValidation)
 		}
 	case models.TransactionTypeDeposit:
-		fromAccount, err = s.accountsClient.GetSystemAccountByCurrency(ctx, transaction.Currency)
+		resp, err := s.accountsClient.GetSystemAccountByCurrency(ctx, &accountsv1.GetSystemAccountByCurrencyRequest{
+			Currency: transaction.Currency,
+		})
 		if err != nil {
-			return nil, fmt.Errorf("get system from_account: %w", err)
+			return nil, fmt.Errorf("get system from_account (gRPC): %w", err)
 		}
-		if fromAccount == nil {
-			return nil, fmt.Errorf("%w: system account not found for currency %s", errs.ErrNotFound, transaction.Currency)
-		}
+		fromAccount = s.mapToModelResponse(resp)
 
-		toAccount, err = s.accountsClient.GetAccountByUserIDAndCurrency(ctx, userID, transaction.Currency)
+		resp, err = s.accountsClient.GetAccountByUserIDAndCurrency(ctx, &accountsv1.GetAccountByUserIDAndCurrencyRequest{
+			UserId:   userID,
+			Currency: transaction.Currency,
+		})
 		if err != nil {
-			return nil, fmt.Errorf("get user to_account: %w", err)
+			return nil, fmt.Errorf("get user to_account (gRPC): %w", err)
 		}
-		if toAccount == nil {
-			return nil, fmt.Errorf("%w: user account not found for user %s and currency %s", errs.ErrNotFound, userID, transaction.Currency)
-		}
+		toAccount = s.mapToModelResponse(resp)
 	case models.TransactionTypeWithdrawal:
-		fromAccount, err = s.accountsClient.GetAccountByUserIDAndCurrency(ctx, userID, transaction.Currency)
+		resp, err := s.accountsClient.GetAccountByUserIDAndCurrency(ctx, &accountsv1.GetAccountByUserIDAndCurrencyRequest{
+			UserId:   userID,
+			Currency: transaction.Currency,
+		})
 		if err != nil {
-			return nil, fmt.Errorf("get user from_account: %w", err)
+			return nil, fmt.Errorf("get user from_account (gRPC): %w", err)
 		}
-		if fromAccount == nil {
-			return nil, fmt.Errorf("%w: user account not found for user %s and currency %s", errs.ErrNotFound, userID, transaction.Currency)
-		}
+		fromAccount = s.mapToModelResponse(resp)
 
-		toAccount, err = s.accountsClient.GetSystemAccountByCurrency(ctx, transaction.Currency)
+		resp, err = s.accountsClient.GetSystemAccountByCurrency(ctx, &accountsv1.GetSystemAccountByCurrencyRequest{
+			Currency: transaction.Currency,
+		})
 		if err != nil {
-			return nil, fmt.Errorf("get system to_account: %w", err)
+			return nil, fmt.Errorf("get system to_account (gRPC): %w", err)
 		}
-		if toAccount == nil {
-			return nil, fmt.Errorf("%w: system account not found for currency %s", errs.ErrNotFound, transaction.Currency)
-		}
+		toAccount = s.mapToModelResponse(resp)
 	case models.TransactionTypeExchange:
 		if transaction.TargetCurrency == nil {
 			return nil, fmt.Errorf("%w: target_currency is required", errs.ErrValidation)
 		}
 
-		fromAccount, err = s.accountsClient.GetAccountByUserIDAndCurrency(ctx, userID, transaction.Currency)
+		resp, err := s.accountsClient.GetAccountByUserIDAndCurrency(ctx, &accountsv1.GetAccountByUserIDAndCurrencyRequest{
+			UserId:   userID,
+			Currency: transaction.Currency,
+		})
 		if err != nil {
-			return nil, fmt.Errorf("get from_account: %w", err)
+			return nil, fmt.Errorf("get from_account (gRPC): %w", err)
 		}
-		if fromAccount == nil {
-			return nil, fmt.Errorf("%w: from_account not found for user %s and currency %s", errs.ErrNotFound, userID, transaction.Currency)
-		}
+		fromAccount = s.mapToModelResponse(resp)
 
-		toAccount, err = s.accountsClient.GetAccountByUserIDAndCurrency(ctx, userID, *transaction.TargetCurrency)
+		resp, err = s.accountsClient.GetAccountByUserIDAndCurrency(ctx, &accountsv1.GetAccountByUserIDAndCurrencyRequest{
+			UserId:   userID,
+			Currency: *transaction.TargetCurrency,
+		})
 		if err != nil {
-			return nil, fmt.Errorf("get to_account: %w", err)
+			return nil, fmt.Errorf("get to_account (gRPC): %w", err)
 		}
-		if toAccount == nil {
-			return nil, fmt.Errorf("%w: to_account (currency: %s) not found for user %s", errs.ErrNotFound, *transaction.TargetCurrency, userID)
-		}
+		toAccount = s.mapToModelResponse(resp)
 	}
 
 	transaction.FromAccountID = fromAccount.ID
@@ -188,4 +194,17 @@ func (s *implementation) UpdateStatus(ctx context.Context, id uuid.UUID, status 
 	tx.Status = status
 	_, err = s.repo.Update(ctx, *tx)
 	return err
+}
+func (s *implementation) mapToModelResponse(resp *accountsv1.GetAccountResponse) *models.AccountResponse {
+	if resp == nil {
+		return nil
+	}
+	id, _ := uuid.Parse(resp.Id)
+	return &models.AccountResponse{
+		ID:       id,
+		UserID:   resp.UserId,
+		Number:   resp.Number,
+		Balance:  resp.Balance,
+		Currency: resp.Currency,
+	}
 }

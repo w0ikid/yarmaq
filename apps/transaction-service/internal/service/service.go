@@ -7,7 +7,7 @@ import (
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/service/saga"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/service/transaction"
 	"github.com/w0ikid/yarmaq/pkg/exchange"
-	"github.com/w0ikid/yarmaq/pkg/httpclient/accounts"
+	accountsv1 "github.com/w0ikid/yarmaq/pkg/gen/accounts/v1"
 	"github.com/w0ikid/yarmaq/pkg/zitadel"
 	"go.uber.org/zap"
 )
@@ -19,7 +19,7 @@ type Service struct {
 	SagaService        saga.Service
 }
 
-func New(repositories *repo.Repository, zitadelClient *zitadel.Client, accountsClient *accounts.Client, logger *zap.SugaredLogger) *Service {
+func New(repositories *repo.Repository, zitadelClient *zitadel.Client, accountsClient accountsv1.AccountsServiceClient, logger *zap.SugaredLogger) *Service {
 	logger = logger.Named("service")
 	exchangeSvc := exchange.NewService()
 	return &Service{

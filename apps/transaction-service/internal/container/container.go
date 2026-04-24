@@ -8,8 +8,8 @@ import (
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase/outbox"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/usecase/transaction"
-	"github.com/w0ikid/yarmaq/pkg/httpclient/accounts"
 	"github.com/w0ikid/yarmaq/pkg/zitadel"
+	accountsv1 "github.com/w0ikid/yarmaq/pkg/gen/accounts/v1"
 	"go.uber.org/zap"
 )
 
@@ -26,7 +26,7 @@ func NewContainer(
 	ctx context.Context,
 	repositories *repo.Repository,
 	zitadelClient *zitadel.Client,
-	accountsClient *accounts.Client,
+	accountsClient accountsv1.AccountsServiceClient,
 	logger *zap.SugaredLogger,
 
 ) *Container {

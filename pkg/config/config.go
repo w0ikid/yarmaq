@@ -51,8 +51,9 @@ type KafkaConfig struct {
 }
 
 type ServiceConfig struct {
-	AccountsServiceURL    string
-	TransactionServiceURL string
+	AccountsServiceURL      string
+	AccountsServiceGRPCAddr string
+	TransactionServiceURL   string
 }
 
 type SMTPConfig struct {
@@ -112,8 +113,9 @@ func Load(prefix ...string) Config {
 			Topic:   getEnv("KAFKA_TOPIC", "events", servicePrefix),
 		},
 		Services: ServiceConfig{
-			AccountsServiceURL:    getEnv("ACCOUNTS_SERVICE_URL", "http://localhost:8081"),
-			TransactionServiceURL: getEnv("TRANSACTION_SERVICE_URL", "http://localhost:8082"),
+			AccountsServiceURL:      getEnv("ACCOUNTS_SERVICE_URL", "http://localhost:8081"),
+			AccountsServiceGRPCAddr: getEnv("ACCOUNTS_SERVICE_GRPC_ADDR", "localhost:50051"),
+			TransactionServiceURL:   getEnv("TRANSACTION_SERVICE_URL", "http://localhost:8082"),
 		},
 		SMTP: SMTPConfig{
 			Host:     getEnv("SMTP_HOST", "localhost", servicePrefix),

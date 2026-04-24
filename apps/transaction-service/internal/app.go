@@ -19,12 +19,13 @@ import (
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/container"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers"
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/handlers/v1/transaction"
-	"github.com/w0ikid/yarmaq/pkg/httpclient"
-	"github.com/w0ikid/yarmaq/pkg/httpclient/accounts"
-
 	"github.com/w0ikid/yarmaq/apps/transaction-service/internal/consumers"
 	kafkamodule "github.com/w0ikid/yarmaq/pkg/kafka_module"
 	"github.com/w0ikid/yarmaq/pkg/outbox_worker"
+
+	"google.golang.org/grpc"
+	"github.com/w0ikid/yarmaq/pkg/grpcclient"
+	accountsv1 "github.com/w0ikid/yarmaq/pkg/gen/accounts/v1"
 )
 
 type App struct {
@@ -32,8 +33,10 @@ type App struct {
 	addr      string
 	container *container.Container
 	logger    *zap.SugaredLogger
-	pg        *repo.Postgres
-	cancel    context.CancelFunc
+	pg             *repo.Postgres
+	cancel         context.CancelFunc
+	grpcConn       *grpc.ClientConn
+	accountsClient accountsv1.AccountsServiceClient
 
 	kafkaPublisher *kafkamodule.Publisher
 	consumers      []*kafkamodule.Consumer
@@ -89,9 +92,16 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 	// Репозитории
 	repositories := igorm.NewGormRepository(pg.DB(), appLogger)
 
-	// HTTP Clients
-	httpClient := httpclient.New(cfg.Services.AccountsServiceURL, zitadelClient)
-	accountsClient := accounts.New(cfg.Services.AccountsServiceURL, httpClient)
+	// gRPC connection to accounts-service
+	creds := grpcclient.NewZitadelCreds(zitadelClient)
+	grpcConn, err := grpcclient.Dial(ctx, grpcclient.Config{
+		Address:  cfg.Services.AccountsServiceGRPCAddr,
+		Insecure: true, // Set to false if using TLS
+	}, grpc.WithPerRPCCredentials(creds))
+	if err != nil {
+		return nil, fmt.Errorf("connect to accounts-service gRPC: %w", err)
+	}
+	accountsClient := accountsv1.NewAccountsServiceClient(grpcConn)
 
 	// DI контейнер
 	cont := container.NewContainer(
@@ -159,6 +169,8 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 		logger:         appLogger,
 		pg:             pg,
 		cancel:         cancel,
+		grpcConn:       grpcConn,
+		accountsClient: accountsClient,
 		kafkaPublisher: kafkaPublisher,
 		outboxWorker:   outboxWorker,
 		consumers:      appConsumers,
@@ -202,6 +214,14 @@ func (a *App) Stop(ctx context.Context) error {
 		errOccurred = true
 	} else {
 		a.logger.Info("postgres connection closed")
+	}
+
+	// close gRPC connection
+	if err := a.grpcConn.Close(); err != nil {
+		a.logger.Error("gRPC connection close failed", zap.Error(err))
+		errOccurred = true
+	} else {
+		a.logger.Info("gRPC connection to accounts-service closed")
 	}
 
 	if errOccurred {

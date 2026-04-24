@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/w0ikid/yarmaq/pkg/middleware"
+	"github.com/w0ikid/yarmaq/pkg/constants"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/account"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/internals"
 	"github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/v1/ledger"
@@ -40,7 +41,7 @@ func (r *Router) SetupRoutes(logger *zap.SugaredLogger) {
 	internalRouter := r.router.Group("/internal")
 	internalRouter.Use(
 		middleware.AuthMiddleware(r.handler.JWKS),
-		middleware.ServiceOnlyMiddleware("accounts-service", logger, "transaction-service"),
+		middleware.ServiceOnlyMiddleware(constants.AccountsService, logger, constants.TransactionService),
 	)
 	internals.NewRouter(internalRouter, r.handler.Internal).SetupRoutes()
 

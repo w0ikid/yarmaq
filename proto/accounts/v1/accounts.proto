@@ -6,6 +6,10 @@ option go_package = "github.com/w0ikid/yarmaq/pkg/gen/accounts/v1;accountsv1";
 
 service AccountsService {
   rpc UpdateBalance(UpdateBalanceRequest) returns (UpdateBalanceResponse);
+  rpc GetAccountByID(GetAccountByIDRequest) returns (GetAccountResponse);
+  rpc GetAccountByNumber(GetAccountByNumberRequest) returns (GetAccountResponse);
+  rpc GetAccountByUserIDAndCurrency(GetAccountByUserIDAndCurrencyRequest) returns (GetAccountResponse);
+  rpc GetSystemAccountByCurrency(GetSystemAccountByCurrencyRequest) returns (GetAccountResponse);
 }
 
 message UpdateBalanceRequest {
@@ -17,4 +21,31 @@ message UpdateBalanceRequest {
 
 message UpdateBalanceResponse {
   int64 balance = 1;
+}
+
+message GetAccountByIDRequest {
+  string id = 1;
+}
+
+message GetAccountByNumberRequest {
+  string number = 1;
+}
+
+message GetAccountByUserIDAndCurrencyRequest {
+  string user_id = 1;
+  string currency = 2;
+}
+
+message GetSystemAccountByCurrencyRequest {
+  string currency = 1;
+}
+
+message GetAccountResponse {
+  string id = 1;
+  string user_id = 2;
+  string type = 3;
+  string number = 4;
+  int64 balance = 5;
+  string currency = 6;
+  string status = 7;
 }
