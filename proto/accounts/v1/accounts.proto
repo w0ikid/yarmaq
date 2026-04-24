@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package accounts.v1;
+
+option go_package = "github.com/w0ikid/yarmaq/pkg/gen/accounts/v1;accountsv1";
+
+service AccountsService {
+  rpc UpdateBalance(UpdateBalanceRequest) returns (UpdateBalanceResponse);
+}
+
+message UpdateBalanceRequest {
+  string account_id = 1;
+  int64 amount = 2;
+  string operation_type = 3;
+  string reference_id = 4;
+}
+
+message UpdateBalanceResponse {
+  int64 balance = 1;
+}

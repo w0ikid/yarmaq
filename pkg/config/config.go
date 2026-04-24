@@ -13,6 +13,7 @@ type Config struct {
 	AppEnv   string
 	LogLevel string
 	HTTP     HTTPConfig
+	GRPC     GRPCConfig
 	Postgres PostgresConfig
 	Zitadel  ZitadelConfig
 	Kafka    KafkaConfig
@@ -21,6 +22,10 @@ type Config struct {
 }
 
 type HTTPConfig struct {
+	Port string
+}
+
+type GRPCConfig struct {
 	Port string
 }
 
@@ -84,6 +89,9 @@ func Load(prefix ...string) Config {
 		LogLevel: getEnv("LOG_LEVEL", "dev", servicePrefix),
 		HTTP: HTTPConfig{
 			Port: getEnv("APP_PORT", "8080", servicePrefix),
+		},
+		GRPC: GRPCConfig{
+			Port: getEnv("GRPC_PORT", "50051", servicePrefix),
 		},
 		Postgres: PostgresConfig{
 			Host:     getEnv("POSTGRES_HOST", "localhost", servicePrefix),

@@ -25,11 +25,18 @@ import (
 
 	kafkamodule "github.com/w0ikid/yarmaq/pkg/kafka_module"
 	"github.com/w0ikid/yarmaq/pkg/outbox_worker"
+
+	accountsv1 "github.com/w0ikid/yarmaq/pkg/gen/accounts/v1"
+	grpc_v1 "github.com/w0ikid/yarmaq/apps/accounts-service/internal/handlers/grpc/v1"
+	"google.golang.org/grpc"
+	"net"
 )
 
 type App struct {
 	fapp      *fiber.App
+	grpcServer *grpc.Server
 	addr      string
+	grpcAddr  string
 	container *container.Container
 	logger    *zap.SugaredLogger
 	pg        *repo.Postgres
@@ -135,13 +142,20 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 	router := handlers.NewRouter(fapp, h)
 	router.SetupRoutes(appLogger)
 
+	// gRPC server
+	grpcServer := grpc.NewServer()
+	accountsGrpcHandler := grpc_v1.NewAccountsHandler(cont.AccountDomain, appLogger)
+	accountsv1.RegisterAccountsServiceServer(grpcServer, accountsGrpcHandler)
+
 	// Контекст приложения
 	_, cancel := context.WithCancel(ctx)
 
 	return &App{
-		fapp:      fapp,
-		addr:      ":" + cfg.HTTP.Port,
-		container: cont,
+		fapp:       fapp,
+		grpcServer: grpcServer,
+		addr:       ":" + cfg.HTTP.Port,
+		grpcAddr:   ":" + cfg.GRPC.Port,
+		container:  cont,
 		logger:    appLogger,
 		pg:        pg,
 		cancel:    cancel,
@@ -154,6 +168,18 @@ func NewApp(ctx context.Context, cfg config.Config, logger *zap.SugaredLogger) (
 // Start запускает HTTP сервер
 func (a *App) Start(ctx context.Context) error {
 	go a.outboxWorker.Run(ctx)
+
+	// Start gRPC server
+	lis, err := net.Listen("tcp", a.grpcAddr)
+	if err != nil {
+		return fmt.Errorf("failed to listen gRPC: %w", err)
+	}
+	go func() {
+		a.logger.Info("starting gRPC server", zap.String("addr", a.grpcAddr))
+		if err := a.grpcServer.Serve(lis); err != nil {
+			a.logger.Error("gRPC server failed", zap.Error(err))
+		}
+	}()
 
 	a.logger.Info("starting HTTP server", zap.String("addr", a.addr))
 	if err := a.fapp.Listen(a.addr); err != nil {
@@ -177,6 +203,10 @@ func (a *App) Stop(ctx context.Context) error {
 	} else {
 		a.logger.Info("fiber server stopped gracefully")
 	}
+
+	// stop gRPC server
+	a.grpcServer.GracefulStop()
+	a.logger.Info("gRPC server stopped gracefully")
 
 	// close postgres
 	if err := a.pg.Close(); err != nil {
